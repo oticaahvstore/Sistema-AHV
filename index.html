@@ -282,17 +282,24 @@
             "C.O. Clean": 237.00
         };
 
-        // --- 3. FUNÇÕES DE SALVAMENTO E CARREGAMENTO (AJUSTADAS PARA SUPABASE) ---
-        async function salvarPedido() {
+       async function salvarPedido() {
             const os = document.getElementById('num_os').value;
             const nome = document.getElementById('nome_cliente').value;
             if(!os || !nome) return alert("Preencha Nome e O.S.");
 
             const dados = {};
-            // ESTA LINHA ABAIXO FOI CORRIGIDA PARA IGNORAR O CAMPO DE BUSCA
+            
+            // Lista de campos que são NÚMEROS no banco de dados
+            const camposNumericos = ['m_ponte', 'm_aro_h', 'm_aro_v', 'm_aro_m', 'vlr_armacao', 'vlr_lentes', 'vlr_desconto'];
+
             document.querySelectorAll('input, select, textarea').forEach(el => { 
                 if(el.id && el.id !== 'select_busca') {
-                    dados[el.id] = el.value; 
+                    // Se o campo for numérico e estiver vazio, envia null. Se não, envia o valor normal.
+                    if (camposNumericos.includes(el.id)) {
+                        dados[el.id] = el.value === "" ? null : parseFloat(el.value);
+                    } else {
+                        dados[el.id] = el.value;
+                    }
                 }
             });
 
@@ -306,7 +313,7 @@
                 atualizarSelectBusca();
             }
         }
-
+        
         async function carregarPedidoSelecionado(os) {
             if(!os) return;
             // Busca no Supabase
