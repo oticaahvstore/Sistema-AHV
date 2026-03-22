@@ -206,12 +206,10 @@
 
     // --- FUNÇÕES DE LOGIN ---
 async function fazerLogin() {
-    console.log("Botão clicado!"); // Isso avisa que o clique funcionou
-    
     const user = document.getElementById('user_login').value.trim();
     const pass = document.getElementById('pass_login').value;
     
-    if(!user || !pass) return alert("Digite usuário e senha!");
+    if(!user || !pass) return; // Se estiver vazio, não faz nada
 
     const email = user.includes('@') ? user : user + "@ahvstore.com";
 
@@ -219,15 +217,15 @@ async function fazerLogin() {
         const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
 
         if (error) {
-            alert("Erro do Supabase: " + error.message);
+            alert("Usuário ou senha incorretos."); // Só avisa se errar
         } else if (data.user) {
-            alert("Login realizado! Entrando...");
+            // LOGIN COM SUCESSO: Esconde a tela azul e mostra o sistema
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('sistema-content').style.display = 'block';
             atualizarSelectBusca();
         }
     } catch (e) {
-        alert("Erro crítico: " + e.message);
+        console.error("Erro técnico:", e.message);
     }
 }
 
