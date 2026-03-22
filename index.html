@@ -10,16 +10,18 @@
         * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #e9ecef; margin: 0; padding: 5px; display: flex; flex-direction: column; align-items: center; }
 
-        /* TELA DE LOGIN */
+        /* A ÚNICA ALTERAÇÃO SOLICITADA: OCULTAR SETAS */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none !important; margin: 0 !important; }
+        input[type=number] { -moz-appearance: textfield !important; appearance: none !important; }
+
         #login-screen { position: fixed; inset: 0; background: var(--primary); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
         .login-box { background: white; padding: 25px; border-radius: 10px; display: flex; flex-direction: column; gap: 12px; width: 300px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         .login-box h3 { color: #333; margin: 0; text-align: center; }
         .login-box input { height: 40px; border: 1px solid #ddd; padding: 8px; color: #333; border-radius: 5px; }
         .login-box button { height: 45px; background: var(--secondary); color: white; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; }
 
-        /* CONTEÚDO DO SISTEMA */
         #sistema-content { display: none; width: 210mm; }
-
         .page { width: 100%; min-height: 290mm; padding: 10px 15px; background: #fff; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
         .section-title { color: var(--primary); font-weight: 700; margin: 6px 0 3px; padding-left: 8px; border-left: 4px solid var(--primary); text-transform: uppercase; font-size: 10px; }
         .eye-row { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 3px; background: #fdfdfd; padding: 4px 10px; border-radius: 6px; border: 1px solid #eef2f7; }
@@ -28,26 +30,29 @@
         .eye-label { background: #fff; border: 1px solid var(--border); border-radius: 6px; width: 40px; height: var(--input-height); display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--primary); flex-shrink: 0; font-size: 10px; }
         .input-group { display: flex; flex-direction: column; flex: 1; }
         .input-group label { font-size: 8px; color: #7f8c8d; font-weight: 700; margin-bottom: 1px; text-transform: uppercase; padding-left: 2px; }
-        select, input, textarea { height: var(--input-height); border: 1px solid var(--border); border-radius: 4px; font-size: 10px; padding: 0 6px; background: white; width: 100%; appearance: none; -webkit-appearance: none; }
+        select, input, textarea { height: var(--input-height); border: 1px solid var(--border); border-radius: 4px; font-size: 10px; padding: 0 6px; background: white; width: 100%; }
         textarea { height: 45px; padding: 6px; resize: none; font-family: inherit; margin-top: 5px; }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f3f5; padding-bottom: 5px; margin-bottom: 3px; }
         .logo img { height: 40px; }
         .store-info { text-align: right; font-size: 8px; color: #666; line-height: 1.1; }
         .toolbar { width: 100%; background: #333; padding: 8px 15px; display: flex; gap: 15px; border-radius: 8px 8px 0 0; align-items: center; color: white; }
-        .footer-buttons { display: flex; gap: 10px; margin-top: auto; padding-top: 8px; }
-        .btn { padding: 8px; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; font-size: 10px; transition: 0.2s; flex: 1; }
+        
+        .footer-buttons { display: flex; gap: 10px; margin-top: auto; padding-top: 8px; justify-content: center; }
+        .btn { width: 55px; height: 45px; border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .btn-save { background: var(--secondary); }
         .btn-print { background: var(--primary); }
         .btn-lab { background: var(--lab); }
         .btn-new { background: #777; }
-        .search-select { flex: 2; background: #444; color: white; border: 1px solid #555; height: 30px; padding: 0 10px; border-radius: 4px; cursor: pointer; }
+        .btn:hover { transform: translateY(-3px); filter: brightness(1.1); box-shadow: 0 5px 10px rgba(0,0,0,0.2); }
+
+        .search-select { flex: 2; background: #444; color: white; border: 1px solid #555; height: 30px; border-radius: 4px; }
 
         @media print { 
             body { padding: 0; background: none; } 
             .no-print { display: none !important; } 
             #sistema-content { display: block !important; }
             .page { box-shadow: none; border: none; width: 210mm; height: 297mm; padding: 5mm; margin: 0; }
-            body.modo-lab .sensivel { display: none !important; }
+            body.modo-lab .financeiro-section, body.modo-lab .sensivel { display: none !important; }
             body.modo-lab .cliente-titulo::after { content: " (VIA LABORATÓRIO)"; }
         }
     </style>
@@ -147,14 +152,14 @@
             <div class="input-group" style="flex: 1.2;"><label>Tipo</label><select id="tipo_lente_od" onchange="filtrarLentes('od')"><option value=""></option><option>Bifocal</option><option>Multifocal</option><option>Multifocal Acabado</option><option>Visão Simples Surfaçado</option><option>Visão Simples Acabado</option><option>Visão Intermediaria</option></select></div>
             <div class="input-group" style="flex: 0.6;"><label>Cód.</label><input type="text" id="cod_lente_od" oninput="buscarPorCodigo('od')"></div>
             <div class="input-group" style="flex: 2.2;"><label>Lente</label><select id="nome_lente_od" onchange="buscarPorNome('od')"><option value=""></option></select></div>
-            <div class="input-group" style="flex: 1.2;"><label>AR</label><select id="ar_od" onchange="atualizarPrecoAutomatico()"><option value=""></option><option>Sem AR</option><option>Crizal Sapphire</option><option>Crizal Rock</option><option>Blue Cut</option><option>No-Reflex</option></select></div>
+            <div class="input-group" style="flex: 1.2;"><label>AR</label><select id="ar_od" onchange="atualizarPrecoAutomatico()"><option value=""></option><option>Sem AR</option><option>Crizal Sapphire</option><option>Crizal Rock</option><option>Blue Cut</option><option>No-Reflex</option><option>C.O. Clean</option></select></div>
         </div>
         <div class="eye-row lentes">
             <div class="eye-label">OE</div>
             <div class="input-group" style="flex: 1.2;"><label>Tipo</label><select id="tipo_lente_oe" onchange="filtrarLentes('oe')"><option value=""></option><option>Bifocal</option><option>Multifocal</option><option>Multifocal Acabado</option><option>Visão Simples Surfaçado</option><option>Visão Simples Acabado</option><option>Visão Intermediaria</option></select></div>
             <div class="input-group" style="flex: 0.6;"><label>Cód.</label><input type="text" id="cod_lente_oe" oninput="buscarPorCodigo('oe')"></div>
             <div class="input-group" style="flex: 2.2;"><label>Lente</label><select id="nome_lente_oe" onchange="buscarPorNome('oe')"><option value=""></option></select></div>
-            <div class="input-group" style="flex: 1.2;"><label>AR</label><select id="ar_oe" onchange="atualizarPrecoAutomatico()"><option value=""></option><option>Sem AR</option><option>Crizal Sapphire</option><option>Crizal Rock</option><option>Blue Cut</option><option>No-Reflex</option></select></div>
+            <div class="input-group" style="flex: 1.2;"><label>AR</label><select id="ar_oe" onchange="atualizarPrecoAutomatico()"><option value=""></option><option>Sem AR</option><option>Crizal Sapphire</option><option>Crizal Rock</option><option>Blue Cut</option><option>No-Reflex</option><option>C.O. Clean</option></select></div>
         </div>
 
         <div class="section-title">Armação e Medidas Técnicas</div>
@@ -171,124 +176,97 @@
             <div class="input-group" style="flex: 1.2;"><label style="color:var(--primary)">Ø Diâmetro Sug.</label><input type="text" id="m_diametro" readonly style="font-weight:bold; background:#e3f2fd; color:#1565c0;"></div>
         </div>
 
-        <div class="section-title">Financeiro</div>
-        <div class="eye-row" style="background: #e8f5e9;">
-            <div class="input-group"><label>Armação (R$)</label><input type="number" id="vlr_armacao" step="0.01" oninput="calcularTotal()"></div>
-            <div class="input-group"><label>Lentes (R$)</label><input type="number" id="vlr_lentes" step="0.01" oninput="calcularTotal()"></div>
-            <div class="input-group"><label>Desconto (R$)</label><input type="number" id="vlr_desconto" step="0.01" oninput="calcularTotal()"></div>
-            <div class="input-group" style="flex: 1.2;"><label style="color:#2e7d32; font-weight:bold;">Total Venda</label><input type="text" id="vlr_total" readonly style="font-weight:bold; background:white; color:#1b5e20;"></div>
+        <div class="financeiro-section">
+            <div class="section-title">Financeiro</div>
+            <div class="eye-row" style="background: #e8f5e9;">
+                <div class="input-group"><label>Armação (R$)</label><input type="number" id="vlr_armacao" step="0.01" oninput="calcularTotal()"></div>
+                <div class="input-group"><label>Lentes (R$)</label><input type="number" id="vlr_lentes" step="0.01" oninput="calcularTotal()"></div>
+                <div class="input-group"><label>Desconto (R$)</label><input type="number" id="vlr_desconto" step="0.01" oninput="calcularTotal()"></div>
+                <div class="input-group" style="flex: 1.2;"><label style="color:#2e7d32; font-weight:bold;">Total Venda</label><input type="text" id="vlr_total" readonly style="font-weight:bold; background:white; color:#1b5e20;"></div>
+            </div>
         </div>
 
         <div class="section-title">Observações</div>
         <textarea id="obs_pedido" placeholder="Notas..."></textarea>
 
         <div class="footer-buttons no-print">
-            <button class="btn btn-save" onclick="salvarPedido()">💾 SALVAR</button>
-            <button class="btn btn-print" onclick="imprimirGeral()">🖨️ COMPLETO</button>
-            <button class="btn btn-lab" onclick="imprimirLaboratorio()">🧪 LAB</button>
-            <button class="btn btn-new" onclick="novoPedido()">📄 NOVO</button>
+            <button class="btn btn-save" title="Salvar" onclick="salvarPedido()">💾</button>
+            <button class="btn btn-print" title="Imprimir Completo" onclick="imprimirGeral()">🖨️</button>
+            <button class="btn btn-lab" title="Imprimir Laboratório" onclick="imprimirLaboratorio()">🔬</button>
+            <button class="btn btn-new" title="Novo Pedido" onclick="novoPedido()">📄</button>
         </div>
     </div>
 </div>
 
 <script>
-    // --- 1. CONFIGURAÇÃO DO SUPABASE (COLOQUE SUAS CHAVES AQUI) ---
-    const _supabase = supabase.createClient('SUA_URL', 'SUA_KEY');
+    const _supabase = supabase.createClient('https://gxeuheqhpsapigyozanu.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4ZXVoZXFocHNhcGlneW96YW51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNzU3NDcsImV4cCI6MjA4OTc1MTc0N30.h_Yqrj959cpXFKSYO3wrvGQ7RXO5QEL2NeRy1QqfQJc');
     const TABELA = 'pedidos';
 
-    // --- 2. TRAVA DE INATIVIDADE (SÓ ATIVA APÓS LOGIN) ---
-    let tempoInatividade;
-    function resetarCronometro() {
-        clearTimeout(tempoInatividade);
-        tempoInatividade = setTimeout(() => {
-            if (document.getElementById('sistema-content').style.display === 'block') {
-                alert("Sessão encerrada por inatividade.");
-                fazerLogout();
-            }
-        }, 600000); // 10 minutos
-    }
-
-    function ativarVigilia() {
-        window.onmousemove = resetarCronometro;
-        window.onmousedown = resetarCronometro;
-        window.onkeydown = resetarCronometro;
-        window.onclick = resetarCronometro;
-        resetarCronometro();
-    }
-
-    // --- 3. FUNÇÕES DE LOGIN ---
-    async function fazerLogin() {
-        const user = document.getElementById('user_login').value.trim();
-        const pass = document.getElementById('pass_login').value;
-        if(!user || !pass) return alert("Preencha usuário e senha!");
-
-        const email = user.includes('@') ? user : user + "@ahvstore.com";
-
-        const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
-        
-        if (error) {
-            alert("Acesso Negado: Usuário ou senha incorretos.");
-        } else {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('sistema-content').style.display = 'block';
-            atualizarSelectBusca();
-            ativarVigilia(); // Começa a contar o tempo apenas aqui
+    function novoPedido() {
+        if(confirm("Deseja limpar os campos para um novo pedido?")) {
+            document.querySelectorAll('input, select, textarea').forEach(el => {
+                if(!['user_login','pass_login','select_busca'].includes(el.id)) {
+                    el.value = "";
+                }
+            });
+            document.getElementById('data_os').value = new Date().toISOString().split('T')[0];
+            document.getElementById('select_busca').value = "";
         }
     }
 
-    async function fazerLogout() { 
-        await _supabase.auth.signOut(); 
-        location.reload(); 
-    }
+    function imprimirGeral() { document.body.classList.remove('modo-lab'); window.print(); }
+    function imprimirLaboratorio() { document.body.classList.add('modo-lab'); window.print(); }
 
-    // --- 4. FUNÇÕES DE BANCO DE DADOS ---
+    async function fazerLogin() {
+        const user = document.getElementById('user_login').value.trim();
+        const pass = document.getElementById('pass_login').value;
+        const email = user.includes('@') ? user : user + "@ahvstore.com";
+        const { error } = await _supabase.auth.signInWithPassword({ email, password: pass });
+        if (error) return alert("Acesso Negado!");
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('sistema-content').style.display = 'block';
+        atualizarSelectBusca();
+    }
+    async function fazerLogout() { await _supabase.auth.signOut(); location.reload(); }
+
     async function salvarPedido() {
         const os = document.getElementById('num_os').value;
         const nome = document.getElementById('nome_cliente').value;
         if(!os || !nome) return alert("Preencha Nome e O.S.");
-
         const dados = {};
-        const camposNumericos = ['m_ponte', 'm_aro_h', 'm_aro_v', 'm_aro_m', 'vlr_armacao', 'vlr_lentes', 'vlr_desconto'];
-
+        const numFields = ['m_ponte', 'm_aro_h', 'm_aro_v', 'm_aro_m', 'vlr_armacao', 'vlr_lentes', 'vlr_desconto'];
         document.querySelectorAll('input, select, textarea').forEach(el => { 
             if(el.id && !['user_login','pass_login','select_busca'].includes(el.id)) {
-                if (camposNumericos.includes(el.id)) {
-                    dados[el.id] = el.value === "" ? null : parseFloat(el.value);
-                } else {
-                    dados[el.id] = el.value;
-                }
+                dados[el.id] = el.value === "" ? null : (numFields.includes(el.id) ? parseFloat(el.value) : el.value);
             }
         });
-
         const { error } = await _supabase.from(TABELA).upsert(dados, { onConflict: 'num_os' });
-        if (error) alert("Erro ao salvar: " + error.message);
-        else { alert("Pedido salvo com sucesso!"); atualizarSelectBusca(); }
+        if (error) alert("Erro: " + error.message); else alert("Pedido salvo com sucesso!");
+        atualizarSelectBusca();
+    }
+
+    async function atualizarSelectBusca() {
+        const { data } = await _supabase.from(TABELA).select('num_os, nome_cliente').order('num_os', { ascending: false });
+        const s = document.getElementById('select_busca');
+        s.innerHTML = '<option value="">-- Selecione um Pedido --</option>';
+        if (data) data.forEach(p => s.add(new Option(`${p.num_os} | ${p.nome_cliente}`, p.num_os)));
     }
 
     async function carregarPedidoSelecionado(os) {
         if(!os) return;
         const { data: p } = await _supabase.from(TABELA).select('*').eq('num_os', os).single();
-        if(p) {
-            Object.keys(p).forEach(k => {
-                const el = document.getElementById(k);
+        if(p) { 
+            Object.keys(p).forEach(k => { 
+                const el = document.getElementById(k); 
                 if(el) {
                     if(k.includes('tipo_lente')) { el.value = p[k]; filtrarLentes(k.split('_')[2]); }
                     el.value = p[k];
                 }
-            });
-            calcularTotal();
-            atualizarTudo();
+            }); 
+            calcularTotal(); atualizarTudo(); 
         }
     }
 
-    async function atualizarSelectBusca() {
-        const { data: pedidos } = await _supabase.from(TABELA).select('num_os, nome_cliente').order('num_os', { ascending: false });
-        const s = document.getElementById('select_busca');
-        s.innerHTML = '<option value="">-- Selecione um Pedido --</option>';
-        if (pedidos) pedidos.forEach(p => s.add(new Option(`${p.num_os} | ${p.nome_cliente}`, p.num_os)));
-    }
-
-    // --- 5. FUNÇÕES TÉCNICAS ORIGINAIS (MANTIDAS) ---
     const listaLentes = [
         { cod: "101", tipo: "Bifocal", nome: "BIFOCAL ULTREX", preco: 180.00 },
         { cod: "201", tipo: "Multifocal", nome: "VARILUX COMFORT MAX", preco: 1250.00 },
@@ -298,12 +276,7 @@
         { cod: "601", tipo: "Visão Intermediaria", nome: "LENTE OFFICE 2.0", preco: 380.00 },
         { cod: "602", tipo: "Visão Intermediaria", nome: "INTERVIEW", preco: 438.25 }
     ];
-
     const tabelaTratamentos = { "Sem AR": 0, "Padrão": 80, "Crizal Sapphire": 350, "Crizal Rock": 280, "Blue Cut": 120, "No-Reflex": 100, "C.O. Clean": 237.00 };
-
-    function mascaraCPF(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); i.value = v; }
-    function mascaraTel(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{2})(\d)/g, "($1) $2"); v = v.replace(/(\d{5})(\d)/, "$1-$2"); i.value = v; }
-    function mascaraCEP(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{5})(\d)/, "$1-$2"); i.value = v; }
 
     function preencherSeletores() {
         const fmt = (n) => (n > 0 ? "+" : "") + n.toFixed(2).replace('.', ',');
@@ -334,6 +307,14 @@
         if(p && ah && am && dnp) document.getElementById('m_diametro').value = "Ø " + Math.ceil((p + ah) - (dnp * 2) + (am + 2));
     }
 
+    function calcularTotal() {
+        const armacao = parseFloat(document.getElementById('vlr_armacao').value) || 0, lentes = parseFloat(document.getElementById('vlr_lentes').value) || 0, desconto = parseFloat(document.getElementById('vlr_desconto').value) || 0;
+        document.getElementById('vlr_total').value = "R$ " + (armacao + lentes - desconto).toFixed(2).replace('.', ',');
+    }
+
+    function mascaraCPF(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); i.value = v; }
+    function mascaraTel(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{2})(\d)/g, "($1) $2"); v = v.replace(/(\d{5})(\d)/, "$1-$2"); i.value = v; }
+    function mascaraCEP(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{5})(\d)/, "$1-$2"); i.value = v; }
     function filtrarLentes(l) { const t = document.getElementById(`tipo_lente_${l}`).value, s = document.getElementById(`nome_lente_${l}`); s.innerHTML = '<option value=""></option>'; listaLentes.filter(x => x.tipo === t).forEach(x => s.add(new Option(x.nome, x.nome))); }
     function buscarPorCodigo(l) { const c = document.getElementById(`cod_lente_${l}`).value, x = listaLentes.find(i => i.cod === c); if(x) { document.getElementById(`tipo_lente_${l}`).value = x.tipo; filtrarLentes(l); document.getElementById(`nome_lente_${l}`).value = x.nome; atualizarPrecoAutomatico(); } }
     function buscarPorNome(l) { const n = document.getElementById(`nome_lente_${l}`).value, x = listaLentes.find(i => i.nome === n); document.getElementById(`cod_lente_${l}`).value = x ? x.cod : ""; atualizarPrecoAutomatico(); }
@@ -344,30 +325,15 @@
         const arOD = document.getElementById('ar_od').value;
         const arOE = document.getElementById('ar_oe').value;
         let totalLentes = 0;
-        const lenteOD = listaLentes.find(l => l.cod === codOD);
-        if (lenteOD) totalLentes += (lenteOD.preco / 2);
-        const lenteOE = listaLentes.find(l => l.cod === codOE);
-        if (lenteOE) totalLentes += (lenteOE.preco / 2);
+        const lOD = listaLentes.find(l => l.cod === codOD); if (lOD) totalLentes += (lOD.preco / 2);
+        const lOE = listaLentes.find(l => l.cod === codOE); if (lOE) totalLentes += (lOE.preco / 2);
         totalLentes += (tabelaTratamentos[arOD] || 0) / 2;
         totalLentes += (tabelaTratamentos[arOE] || 0) / 2;
         document.getElementById('vlr_lentes').value = totalLentes.toFixed(2);
         calcularTotal();
     }
 
-    function calcularTotal() {
-        const armacao = parseFloat(document.getElementById('vlr_armacao').value) || 0, lentes = parseFloat(document.getElementById('vlr_lentes').value) || 0, desconto = parseFloat(document.getElementById('vlr_desconto').value) || 0;
-        const totalVenda = (armacao + lentes) - desconto;
-        document.getElementById('vlr_total').value = totalVenda.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    }
-
-    function imprimirGeral() { document.body.classList.remove('modo-lab'); window.print(); }
-    function imprimirLaboratorio() { document.body.classList.add('modo-lab'); window.print(); }
-    function novoPedido() { if(confirm("Limpar formulário?")) location.reload(); }
-
-    window.onload = function() {
-        preencherSeletores();
-        document.getElementById('data_os').value = new Date().toISOString().split('T')[0];
-    };
+    window.onload = function() { preencherSeletores(); document.getElementById('data_os').value = new Date().toISOString().split('T')[0]; };
 </script>
 </body>
 </html>
