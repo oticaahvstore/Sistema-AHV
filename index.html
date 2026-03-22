@@ -205,18 +205,27 @@
     const tabelaTratamentos = { "Sem AR": 0, "Padrão": 80, "Crizal Sapphire": 350, "Crizal Rock": 280, "Blue Cut": 120, "No-Reflex": 100 };
 
     // --- FUNÇÕES DE LOGIN ---
-    async function fazerLogin() {
-        const user = document.getElementById('user_login').value.trim();
-        const pass = document.getElementById('pass_login').value;
-        const email = user.includes('@') ? user : user + "@ahvstore.com";
+async function fazerLogin() {
+    const user = document.getElementById('user_login').value.trim();
+    const pass = document.getElementById('pass_login').value;
+    
+    if(!user || !pass) return alert("Preencha usuário e senha!");
 
-        const { error } = await _supabase.auth.signInWithPassword({ email, password: pass });
-        if (error) return alert("Acesso Negado!");
+    const email = user.includes('@') ? user : user + "@ahvstore.com";
 
+    // Mostra um aviso que está tentando entrar
+    console.log("Tentando logar com:", email);
+
+    const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
+
+    if (error) {
+        alert("Erro no Login: " + error.message); // Isso vai nos dizer exatamente qual o erro
+    } else {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('sistema-content').style.display = 'block';
         atualizarSelectBusca();
     }
+}
 
     async function fazerLogout() { await _supabase.auth.signOut(); location.reload(); }
 
