@@ -192,11 +192,11 @@
 </div>
 
 <script>
-    // --- CONFIGURAÇÃO DO SUPABASE ---
+    // --- 1. CONFIGURAÇÃO DO SUPABASE (COLOQUE SUAS CHAVES AQUI) ---
     const _supabase = supabase.createClient('SUA_URL', 'SUA_KEY');
     const TABELA = 'pedidos';
 
-    // --- NOVA TRAVA DE INATIVIDADE (10 MINUTOS) ---
+    // --- 2. TRAVA DE INATIVIDADE (SÓ ATIVA APÓS LOGIN) ---
     let tempoInatividade;
     function resetarCronometro() {
         clearTimeout(tempoInatividade);
@@ -205,42 +205,43 @@
                 alert("Sessão encerrada por inatividade.");
                 fazerLogout();
             }
-        }, 600000); // 600000ms = 10 minutos
+        }, 600000); // 10 minutos
     }
 
-    // Ativa a vigília em todos os movimentos
-    window.onload = () => { preencherSeletores(); document.getElementById('data_os').value = new Date().toISOString().split('T')[0]; resetarCronometro(); };
-    window.onmousemove = resetarCronometro;
-    window.onmousedown = resetarCronometro;
-    window.onkeydown = resetarCronometro;
-    window.onclick = resetarCronometro;
+    function ativarVigilia() {
+        window.onmousemove = resetarCronometro;
+        window.onmousedown = resetarCronometro;
+        window.onkeydown = resetarCronometro;
+        window.onclick = resetarCronometro;
+        resetarCronometro();
+    }
 
-    // --- TABELAS DE PREÇOS ORIGINAIS ---
-    const listaLentes = [
-        { cod: "101", tipo: "Bifocal", nome: "BIFOCAL ULTREX", preco: 180.00 },
-        { cod: "201", tipo: "Multifocal", nome: "VARILUX COMFORT MAX", preco: 1250.00 },
-        { cod: "501", tipo: "Visão Simples Acabado", nome: "VS 1.56 BLUE CUT ACABADO", preco: 150.00 }
-    ];
-    const tabelaTratamentos = { "Sem AR": 0, "Padrão": 80, "Crizal Sapphire": 350, "Crizal Rock": 280, "Blue Cut": 120, "No-Reflex": 100 };
-
-    // --- FUNÇÕES DE LOGIN ---
+    // --- 3. FUNÇÕES DE LOGIN ---
     async function fazerLogin() {
         const user = document.getElementById('user_login').value.trim();
         const pass = document.getElementById('pass_login').value;
+        if(!user || !pass) return alert("Preencha usuário e senha!");
+
         const email = user.includes('@') ? user : user + "@ahvstore.com";
 
-        const { error } = await _supabase.auth.signInWithPassword({ email, password: pass });
-        if (error) return alert("Acesso Negado!");
-
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('sistema-content').style.display = 'block';
-        atualizarSelectBusca();
-        resetarCronometro(); // Inicia o tempo ao logar
+        const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
+        
+        if (error) {
+            alert("Acesso Negado: Usuário ou senha incorretos.");
+        } else {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('sistema-content').style.display = 'block';
+            atualizarSelectBusca();
+            ativarVigilia(); // Começa a contar o tempo apenas aqui
+        }
     }
 
-    async function fazerLogout() { await _supabase.auth.signOut(); location.reload(); }
+    async function fazerLogout() { 
+        await _supabase.auth.signOut(); 
+        location.reload(); 
+    }
 
-    // --- FUNÇÕES DE BANCO DE DADOS ---
+    // --- 4. FUNÇÕES DE BANCO DE DADOS ---
     async function salvarPedido() {
         const os = document.getElementById('num_os').value;
         const nome = document.getElementById('nome_cliente').value;
@@ -251,14 +252,17 @@
 
         document.querySelectorAll('input, select, textarea').forEach(el => { 
             if(el.id && !['user_login','pass_login','select_busca'].includes(el.id)) {
-                if (camposNumericos.includes(el.id)) dados[el.id] = el.value === "" ? null : parseFloat(el.value);
-                else dados[el.id] = el.value;
+                if (camposNumericos.includes(el.id)) {
+                    dados[el.id] = el.value === "" ? null : parseFloat(el.value);
+                } else {
+                    dados[el.id] = el.value;
+                }
             }
         });
 
         const { error } = await _supabase.from(TABELA).upsert(dados, { onConflict: 'num_os' });
-        if (error) alert("Erro: " + error.message);
-        else { alert("Pedido salvo com segurança!"); atualizarSelectBusca(); }
+        if (error) alert("Erro ao salvar: " + error.message);
+        else { alert("Pedido salvo com sucesso!"); atualizarSelectBusca(); }
     }
 
     async function carregarPedidoSelecionado(os) {
@@ -272,7 +276,8 @@
                     el.value = p[k];
                 }
             });
-            calcularTotal(); atualizarTudo();
+            calcularTotal();
+            atualizarTudo();
         }
     }
 
@@ -283,7 +288,19 @@
         if (pedidos) pedidos.forEach(p => s.add(new Option(`${p.num_os} | ${p.nome_cliente}`, p.num_os)));
     }
 
-    // --- SUAS FUNÇÕES TÉCNICAS ---
+    // --- 5. FUNÇÕES TÉCNICAS ORIGINAIS (MANTIDAS) ---
+    const listaLentes = [
+        { cod: "101", tipo: "Bifocal", nome: "BIFOCAL ULTREX", preco: 180.00 },
+        { cod: "201", tipo: "Multifocal", nome: "VARILUX COMFORT MAX", preco: 1250.00 },
+        { cod: "301", tipo: "Multifocal Acabado", nome: "MULTIFOCAL EASY ACABADO", preco: 450.00 },
+        { cod: "401", tipo: "Visão Simples Surfaçado", nome: "ORMA 1.50 SURFAÇADO", preco: 220.00 },
+        { cod: "501", tipo: "Visão Simples Acabado", nome: "VS 1.56 BLUE CUT ACABADO", preco: 150.00 },
+        { cod: "601", tipo: "Visão Intermediaria", nome: "LENTE OFFICE 2.0", preco: 380.00 },
+        { cod: "602", tipo: "Visão Intermediaria", nome: "INTERVIEW", preco: 438.25 }
+    ];
+
+    const tabelaTratamentos = { "Sem AR": 0, "Padrão": 80, "Crizal Sapphire": 350, "Crizal Rock": 280, "Blue Cut": 120, "No-Reflex": 100, "C.O. Clean": 237.00 };
+
     function mascaraCPF(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); i.value = v; }
     function mascaraTel(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{2})(\d)/g, "($1) $2"); v = v.replace(/(\d{5})(\d)/, "$1-$2"); i.value = v; }
     function mascaraCEP(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{5})(\d)/, "$1-$2"); i.value = v; }
@@ -321,6 +338,22 @@
     function buscarPorCodigo(l) { const c = document.getElementById(`cod_lente_${l}`).value, x = listaLentes.find(i => i.cod === c); if(x) { document.getElementById(`tipo_lente_${l}`).value = x.tipo; filtrarLentes(l); document.getElementById(`nome_lente_${l}`).value = x.nome; atualizarPrecoAutomatico(); } }
     function buscarPorNome(l) { const n = document.getElementById(`nome_lente_${l}`).value, x = listaLentes.find(i => i.nome === n); document.getElementById(`cod_lente_${l}`).value = x ? x.cod : ""; atualizarPrecoAutomatico(); }
     
+    function atualizarPrecoAutomatico() {
+        const codOD = document.getElementById('cod_lente_od').value;
+        const codOE = document.getElementById('cod_lente_oe').value;
+        const arOD = document.getElementById('ar_od').value;
+        const arOE = document.getElementById('ar_oe').value;
+        let totalLentes = 0;
+        const lenteOD = listaLentes.find(l => l.cod === codOD);
+        if (lenteOD) totalLentes += (lenteOD.preco / 2);
+        const lenteOE = listaLentes.find(l => l.cod === codOE);
+        if (lenteOE) totalLentes += (lenteOE.preco / 2);
+        totalLentes += (tabelaTratamentos[arOD] || 0) / 2;
+        totalLentes += (tabelaTratamentos[arOE] || 0) / 2;
+        document.getElementById('vlr_lentes').value = totalLentes.toFixed(2);
+        calcularTotal();
+    }
+
     function calcularTotal() {
         const armacao = parseFloat(document.getElementById('vlr_armacao').value) || 0, lentes = parseFloat(document.getElementById('vlr_lentes').value) || 0, desconto = parseFloat(document.getElementById('vlr_desconto').value) || 0;
         const totalVenda = (armacao + lentes) - desconto;
@@ -330,6 +363,11 @@
     function imprimirGeral() { document.body.classList.remove('modo-lab'); window.print(); }
     function imprimirLaboratorio() { document.body.classList.add('modo-lab'); window.print(); }
     function novoPedido() { if(confirm("Limpar formulário?")) location.reload(); }
+
+    window.onload = function() {
+        preencherSeletores();
+        document.getElementById('data_os').value = new Date().toISOString().split('T')[0];
+    };
 </script>
 </body>
 </html>
