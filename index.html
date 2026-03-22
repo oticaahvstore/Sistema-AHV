@@ -206,24 +206,28 @@
 
     // --- FUNÇÕES DE LOGIN ---
 async function fazerLogin() {
+    console.log("Botão clicado!"); // Isso avisa que o clique funcionou
+    
     const user = document.getElementById('user_login').value.trim();
     const pass = document.getElementById('pass_login').value;
     
-    if(!user || !pass) return alert("Preencha usuário e senha!");
+    if(!user || !pass) return alert("Digite usuário e senha!");
 
     const email = user.includes('@') ? user : user + "@ahvstore.com";
 
-    // Mostra um aviso que está tentando entrar
-    console.log("Tentando logar com:", email);
+    try {
+        const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
 
-    const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
-
-    if (error) {
-        alert("Erro no Login: " + error.message); // Isso vai nos dizer exatamente qual o erro
-    } else {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('sistema-content').style.display = 'block';
-        atualizarSelectBusca();
+        if (error) {
+            alert("Erro do Supabase: " + error.message);
+        } else if (data.user) {
+            alert("Login realizado! Entrando...");
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('sistema-content').style.display = 'block';
+            atualizarSelectBusca();
+        }
+    } catch (e) {
+        alert("Erro crítico: " + e.message);
     }
 }
 
