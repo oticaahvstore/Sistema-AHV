@@ -289,7 +289,12 @@
             if(!os || !nome) return alert("Preencha Nome e O.S.");
 
             const dados = {};
-            document.querySelectorAll('input, select, textarea').forEach(el => { if(el.id) dados[el.id] = el.value; });
+            // ESTA LINHA ABAIXO FOI CORRIGIDA PARA IGNORAR O CAMPO DE BUSCA
+            document.querySelectorAll('input, select, textarea').forEach(el => { 
+                if(el.id && el.id !== 'select_busca') {
+                    dados[el.id] = el.value; 
+                }
+            });
 
             // Envia para o Supabase
             const { error } = await _supabase.from(TABELA).upsert(dados, { onConflict: 'num_os' });
