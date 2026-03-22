@@ -17,7 +17,7 @@
         .login-box input { height: 40px; border: 1px solid #ddd; padding: 8px; color: #333; border-radius: 5px; }
         .login-box button { height: 45px; background: var(--secondary); color: white; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; }
 
-        /* CONTEÚDO DO SISTEMA (ESCONDIDO) */
+        /* CONTEÚDO DO SISTEMA */
         #sistema-content { display: none; width: 210mm; }
 
         .page { width: 100%; min-height: 290mm; padding: 10px 15px; background: #fff; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
@@ -193,10 +193,29 @@
 
 <script>
     // --- CONFIGURAÇÃO DO SUPABASE ---
-    const _supabase = supabase.createClient('https://gxeuheqhpsapigyozanu.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4ZXVoZXFocHNhcGlneW96YW51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNzU3NDcsImV4cCI6MjA4OTc1MTc0N30.h_Yqrj959cpXFKSYO3wrvGQ7RXO5QEL2NeRy1QqfQJc');
+    const _supabase = supabase.createClient('SUA_URL', 'SUA_KEY');
     const TABELA = 'pedidos';
 
-    // TABELAS DE PREÇOS ORIGINAIS
+    // --- NOVA TRAVA DE INATIVIDADE (10 MINUTOS) ---
+    let tempoInatividade;
+    function resetarCronometro() {
+        clearTimeout(tempoInatividade);
+        tempoInatividade = setTimeout(() => {
+            if (document.getElementById('sistema-content').style.display === 'block') {
+                alert("Sessão encerrada por inatividade.");
+                fazerLogout();
+            }
+        }, 600000); // 600000ms = 10 minutos
+    }
+
+    // Ativa a vigília em todos os movimentos
+    window.onload = () => { preencherSeletores(); document.getElementById('data_os').value = new Date().toISOString().split('T')[0]; resetarCronometro(); };
+    window.onmousemove = resetarCronometro;
+    window.onmousedown = resetarCronometro;
+    window.onkeydown = resetarCronometro;
+    window.onclick = resetarCronometro;
+
+    // --- TABELAS DE PREÇOS ORIGINAIS ---
     const listaLentes = [
         { cod: "101", tipo: "Bifocal", nome: "BIFOCAL ULTREX", preco: 180.00 },
         { cod: "201", tipo: "Multifocal", nome: "VARILUX COMFORT MAX", preco: 1250.00 },
@@ -205,29 +224,19 @@
     const tabelaTratamentos = { "Sem AR": 0, "Padrão": 80, "Crizal Sapphire": 350, "Crizal Rock": 280, "Blue Cut": 120, "No-Reflex": 100 };
 
     // --- FUNÇÕES DE LOGIN ---
-async function fazerLogin() {
-    const user = document.getElementById('user_login').value.trim();
-    const pass = document.getElementById('pass_login').value;
-    
-    if(!user || !pass) return; // Se estiver vazio, não faz nada
+    async function fazerLogin() {
+        const user = document.getElementById('user_login').value.trim();
+        const pass = document.getElementById('pass_login').value;
+        const email = user.includes('@') ? user : user + "@ahvstore.com";
 
-    const email = user.includes('@') ? user : user + "@ahvstore.com";
+        const { error } = await _supabase.auth.signInWithPassword({ email, password: pass });
+        if (error) return alert("Acesso Negado!");
 
-    try {
-        const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
-
-        if (error) {
-            alert("Usuário ou senha incorretos."); // Só avisa se errar
-        } else if (data.user) {
-            // LOGIN COM SUCESSO: Esconde a tela azul e mostra o sistema
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('sistema-content').style.display = 'block';
-            atualizarSelectBusca();
-        }
-    } catch (e) {
-        console.error("Erro técnico:", e.message);
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('sistema-content').style.display = 'block';
+        atualizarSelectBusca();
+        resetarCronometro(); // Inicia o tempo ao logar
     }
-}
 
     async function fazerLogout() { await _supabase.auth.signOut(); location.reload(); }
 
@@ -274,7 +283,7 @@ async function fazerLogin() {
         if (pedidos) pedidos.forEach(p => s.add(new Option(`${p.num_os} | ${p.nome_cliente}`, p.num_os)));
     }
 
-    // --- SUAS FUNÇÕES TÉCNICAS MANTIDAS ---
+    // --- SUAS FUNÇÕES TÉCNICAS ---
     function mascaraCPF(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); i.value = v; }
     function mascaraTel(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{2})(\d)/g, "($1) $2"); v = v.replace(/(\d{5})(\d)/, "$1-$2"); i.value = v; }
     function mascaraCEP(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{5})(\d)/, "$1-$2"); i.value = v; }
@@ -321,8 +330,6 @@ async function fazerLogin() {
     function imprimirGeral() { document.body.classList.remove('modo-lab'); window.print(); }
     function imprimirLaboratorio() { document.body.classList.add('modo-lab'); window.print(); }
     function novoPedido() { if(confirm("Limpar formulário?")) location.reload(); }
-
-    window.onload = function() { preencherSeletores(); document.getElementById('data_os').value = new Date().toISOString().split('T')[0]; };
 </script>
 </body>
 </html>
