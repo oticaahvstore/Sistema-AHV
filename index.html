@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Pedidos - ÓTICA AHV STORE</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { 
+            --primary: #1a237e; 
+            --secondary: #4CAF50;
+            --lab: #9C27B0;
+            --border: #d1d9e0; 
+            --input-height: 28px;
+        }
+
+        * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background: #e9ecef; 
+            margin: 0; padding: 5px; 
+            display: flex; flex-direction: column; align-items: center; 
+        }
+
+        .page { 
+            width: 210mm; 
+            min-height: 290mm; 
+            padding: 10px 15px; 
+            background: #fff; 
+            border-radius: 4px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-title { 
+            color: var(--primary); 
+            font-weight: 700; 
+            margin: 6px 0 3px; 
+            padding-left: 8px;
+            border-left: 4px solid var(--primary);
+            text-transform: uppercase; 
+            font-size: 10px;
+        }
+
+        .eye-row { 
+            display: flex; 
+            align-items: flex-end; 
+            gap: 6px; 
+            margin-bottom: 3px; 
+            background: #fdfdfd; 
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            border: 1px solid #eef2f7; 
+        }
+
+        .eye-row.perto { background: #fffcf0; border-color: #f3e5ab; }
+        .eye-row.lentes { background: #f0f7ff; border-color: #bcd7ff; }
+
+        .eye-label { 
+            background: #fff; border: 1px solid var(--border); border-radius: 6px; 
+            width: 40px; height: var(--input-height); 
+            display: flex; align-items: center; justify-content: center; 
+            font-weight: 800; color: var(--primary); flex-shrink: 0; font-size: 10px;
+        }
+
+        .input-group { display: flex; flex-direction: column; flex: 1; }
+        .input-group label { font-size: 8px; color: #7f8c8d; font-weight: 700; margin-bottom: 1px; text-transform: uppercase; padding-left: 2px; }
+
+        select, input, textarea { 
+            height: var(--input-height); border: 1px solid var(--border); border-radius: 4px; 
+            font-size: 10px; padding: 0 6px; background: white; width: 100%; 
+            appearance: none; -webkit-appearance: none;
+        }
+
+        textarea { height: 45px; padding: 6px; resize: none; font-family: inherit; margin-top: 5px; }
+
+        .header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 1px solid #f1f3f5; padding-bottom: 5px; margin-bottom: 3px; 
+        }
+        .logo img { height: 40px; }
+        .store-info { text-align: right; font-size: 8px; color: #666; line-height: 1.1; }
+
+        .toolbar { 
+            width: 210mm; background: #333; padding: 8px 15px; 
+            display: flex; gap: 15px; border-radius: 8px 8px 0 0; 
+            align-items: center; color: white;
+        }
+
+        .footer-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+            padding-top: 8px;
+        }
+
+        .btn { 
+            padding: 8px; border: none; border-radius: 5px; 
+            color: white; font-weight: bold; cursor: pointer; font-size: 10px;
+            transition: 0.2s; flex: 1;
+        }
+        .btn-save { background: var(--secondary); }
+        .btn-print { background: var(--primary); }
+        .btn-lab { background: var(--lab); }
+        .btn-new { background: #777; }
+
+        .search-select {
+            flex: 2;
+            background: #444;
+            color: white;
+            border: 1px solid #555;
+            height: 30px;
+            padding: 0 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        @media print { 
+            body { padding: 0; background: none; } 
+            .no-print { display: none !important; } 
+            .page { box-shadow: none; border: none; width: 210mm; height: 297mm; padding: 5mm; margin: 0; }
+            @page { size: A4; margin: 0; }
+            body.modo-lab .sensivel { display: none !important; }
+            body.modo-lab .cliente-titulo::after { content: " (VIA LABORATÓRIO)"; }
+        }
+    </style>
+</head>
+<body id="main-body">
+
+    <div class="toolbar no-print">
+        <div style="font-size: 10px; font-weight: bold;">BUSCAR CLIENTE SALVO:</div>
+        <select id="select_busca" class="search-select" onchange="carregarPedidoSelecionado(this.value)">
+            <option value="">-- Selecione um Pedido --</option>
+        </select>
+        <div style="font-size: 9px; opacity: 0.7;">(O.S. | Nome)</div>
+    </div>
+
+    <div class="page" id="os-content">
+        <div class="header">
+            <div class="logo"><img src="https://i.ibb.co/hxp4j2T9/logo.png" alt="Logo"></div>
+            <div class="store-info">
+                <b style="font-size: 11px; color: #333;">ÓTICA AHV STORE</b><br>
+                CNPJ: 58.938.512/0001-83 | WhatsApp: (11) 94854-5043
+            </div>
+        </div>
+
+        <div class="section-title cliente-titulo">Dados do Cliente</div>
+        <div class="eye-row" style="background: white;">
+            <div class="input-group" style="flex: 0.4;"><label>Data</label><input type="date" id="data_os"></div>
+            <div class="input-group" style="flex: 0.4;"><label>O.S. Nº</label><input type="text" id="num_os"></div>
+            <div class="input-group" style="flex: 1.5;"><label>Nome Completo</label><input type="text" id="nome_cliente"></div>
+            <div class="input-group sensivel" style="flex: 0.7;"><label>CPF</label><input type="text" id="cpf_cliente" maxlength="14" oninput="mascaraCPF(this)"></div>
+            <div class="input-group sensivel" style="flex: 0.7;"><label>Telefone</label><input type="text" id="tel_cliente" maxlength="15" oninput="mascaraTel(this)"></div>
+        </div>
+        <div class="eye-row sensivel" style="background: white;">
+            <div class="input-group" style="flex: 2.5;"><label>Rua / Logradouro</label><input type="text" id="rua_cliente"></div>
+            <div class="input-group" style="flex: 0.5;"><label>Nº</label><input type="text" id="num_end_cliente"></div>
+            <div class="input-group" style="flex: 1;"><label>Complemento</label><input type="text" id="comp_cliente"></div>
+            <div class="input-group" style="flex: 0.7;"><label>CEP</label><input type="text" id="cep_cliente" maxlength="9" oninput="mascaraCEP(this)"></div>
+        </div>
+        <div class="eye-row sensivel" style="background: white;">
+            <div class="input-group" style="flex: 1.2;"><label>Bairro</label><input type="text" id="bairro_cliente"></div>
+            <div class="input-group" style="flex: 1.2;"><label>Cidade</label><input type="text" id="cid_cliente"></div>
+            <div class="input-group" style="flex: 0.25;"><label>UF</label><input type="text" id="uf_cliente" maxlength="2"></div>
+        </div>
+
+        <div class="section-title">Prescrição Longe (PL)</div>
+        <div class="eye-row">
+            <div class="eye-label">OD</div>
+            <div class="input-group"><label>Esférico</label><select id="e_od_l" class="sel-esf" onchange="atualizarTudo()"></select></div>
+            <div class="input-group"><label>Cilíndrico</label><select id="c_od_l" class="sel-cil" onchange="atualizarTudo()"></select></div>
+            <div class="input-group"><label>Eixo</label><select id="x_od_l" class="sel-eixo" onchange="atualizarTudo()"></select></div>
+            <div class="input-group"><label>Adição</label><select id="add_od" class="sel-add" onchange="atualizarTudo()"></select></div>
+            <div class="input-group"><label>DNP</label><input type="number" step="0.5" id="dnp_od_l" oninput="atualizarTudo()"></div>
+            <div class="input-group"><label>Altura</label><input type="number" step="0.1" id="alt_od_l" oninput="atualizarTudo()"></div>
+        </div>
+        <div class="eye-row">
+            <div class="eye-label">OE</div>
+            <div class="input-group"><label>Esférico</label><select id="e_oe_l" class="sel-esf" onchange="atualizarTudo()"></select></div>
+            <div class="input-group"><label>Cilíndrico</label><select id="c_oe_l" class="sel-cil" onchange="atualizarTudo()"></select></div>
+            <div class="input-group"><label>Eixo</label><select id="x_oe_l" class="sel-eixo" onchange="atualizarTudo()"></select></div>
+            <div class="input-group"><label>Adição</label><select id="add_oe" class="sel-add" onchange="atualizarTudo()"></select></div>
+            <div class="input-group"><label>DNP</label><input type="number" step="0.5" id="dnp_oe_l" oninput="atualizarTudo()"></div>
+            <div class="input-group"><label>Altura</label><input type="number" step="0.1" id="alt_oe_l" oninput="atualizarTudo()"></div>
+        </div>
+
+        <div class="section-title">Prescrição Perto (PP)</div>
+        <div class="eye-row perto">
+            <div class="eye-label" style="color: #d4a017;">OD</div>
+            <div class="input-group"><label>Esférico</label><input type="text" id="e_od_p"></div>
+            <div class="input-group"><label>Cilíndrico</label><input type="text" id="c_od_p"></div>
+            <div class="input-group"><label>Eixo</label><input type="text" id="x_od_p"></div>
+            <div class="input-group"><label>DNP</label><input type="text" id="dnp_od_p"></div>
+            <div class="input-group"><label>Altura</label><input type="text" id="alt_od_p"></div>
+        </div>
+        <div class="eye-row perto">
+            <div class="eye-label" style="color: #d4a017;">OE</div>
+            <div class="input-group"><label>Esférico</label><input type="text" id="e_oe_p"></div>
+            <div class="input-group"><label>Cilíndrico</label><input type="text" id="c_oe_p"></div>
+            <div class="input-group"><label>Eixo</label><input type="text" id="x_oe_p"></div>
+            <div class="input-group"><label>DNP</label><input type="text" id="dnp_oe_p"></div>
+            <div class="input-group"><label>Altura</label><input type="text" id="alt_oe_p"></div>
+        </div>
+
+        <div class="section-title">Lentes</div>
+        <div class="eye-row lentes">
+            <div class="eye-label">OD</div>
+            <div class="input-group" style="flex: 1.2;"><label>Tipo</label><select id="tipo_lente_od" onchange="filtrarLentes('od')"><option value=""></option><option>Bifocal</option><option>Multifocal</option><option>Multifocal Acabado</option><option>Visão Simples Surfaçado</option><option>Visão Simples Acabado</option><option>Visão Intermediaria</option></select></div>
+            <div class="input-group" style="flex: 0.6;"><label>Cód.</label><input type="text" id="cod_lente_od" oninput="buscarPorCodigo('od')"></div>
+            <div class="input-group" style="flex: 2.2;"><label>Lente</label><select id="nome_lente_od" onchange="buscarPorNome('od')"><option value=""></option></select></div>
+            <div class="input-group" style="flex: 1.2;"><label>Anti-Reflexo</label><select id="ar_od" onchange="atualizarPrecoAutomatico()"><option value=""></option><option>Sem AR</option><option>Crizal Sapphire</option><option>C.O. Clean</option><option>Crizal Rock</option><option>Blue Cut</option><option>No-Reflex</option></select></div>
+        </div>
+        <div class="eye-row lentes">
+            <div class="eye-label">OE</div>
+            <div class="input-group" style="flex: 1.2;"><label>Tipo</label><select id="tipo_lente_oe" onchange="filtrarLentes('oe')"><option value=""></option><option>Bifocal</option><option>Multifocal</option><option>Multifocal Acabado</option><option>Visão Simples Surfaçado</option><option>Visão Simples Acabado</option><option>Visão Intermediaria</option></select></div>
+            <div class="input-group" style="flex: 0.6;"><label>Cód.</label><input type="text" id="cod_lente_oe" oninput="buscarPorCodigo('oe')"></div>
+            <div class="input-group" style="flex: 2.2;"><label>Lente</label><select id="nome_lente_oe" onchange="buscarPorNome('oe')"><option value=""></option></select></div>
+            <div class="input-group" style="flex: 1.2;"><label>Anti-Reflexo</label><select id="ar_oe" onchange="atualizarPrecoAutomatico()"><option value=""></option><option>Sem AR</option><option>Crizal Sapphire</option><option>C.O. Clean</option><option>Crizal Rock</option><option>Blue Cut</option><option>No-Reflex</option></select></div>
+        </div>
+
+        <div class="section-title">Armação e Medidas Técnicas</div>
+        <div class="eye-row" style="background: white;">
+            <div class="input-group"><label>Material</label><select id="material_arma"><option value=""></option><option>Acetato</option><option>Metal</option><option>Fio de Nylon</option><option>Fio de Aço</option><option>Parafuso</option></select></div>
+            <div class="input-group"><label>Estado</label><select id="estado_arma"><option value=""></option><option>Novo</option><option>Usado</option></select></div>
+            <div class="input-group" style="flex: 2;"><label>Marca / Referência / Cor</label><input type="text" id="ref_arma"></div>
+        </div>
+        <div class="eye-row">
+            <div class="input-group"><label>Ponte</label><input type="number" id="m_ponte" oninput="calcularDiametro()"></div>
+            <div class="input-group"><label>Aro Horizontal</label><input type="number" id="m_aro_h" oninput="calcularDiametro()"></div>
+            <div class="input-group"><label>Aro Vertical</label><input type="number" id="m_aro_v"></div>
+            <div class="input-group"><label>Aro Maior</label><input type="number" id="m_aro_m" oninput="calcularDiametro()"></div>
+            <div class="input-group" style="flex: 1.2;"><label style="color:var(--primary)">Ø Diâmetro da Lente</label><input type="text" id="m_diametro" readonly style="font-weight:bold; background:#e3f2fd; color:#1565c0;"></div>
+        </div>
+
+        <div class="section-title">Financeiro</div>
+        <div class="eye-row" style="background: #e8f5e9; border-color: #a5d6a7;">
+            <div class="input-group"><label>Armação (R$)</label>
+                <input type="number" id="vlr_armacao" step="0.01" oninput="calcularTotal()"></div>
+            <div class="input-group"><label>Lentes (R$)</label>
+                <input type="number" id="vlr_lentes" step="0.01" oninput="calcularTotal()"></div>
+            <div class="input-group"><label>Desconto (R$)</label>
+                <input type="number" id="vlr_desconto" step="0.01" oninput="calcularTotal()"></div>
+            <div class="input-group" style="flex: 1.2;"><label style="color:#2e7d32; font-weight:bold;">Total Venda</label>
+                <input type="text" id="vlr_total" readonly style="font-weight:bold; background:white; color:#1b5e20;"></div>
+        </div>
+
+        <div class="section-title">Observações</div>
+        <textarea id="obs_pedido" placeholder="Observações para o laboratório ou cliente..."></textarea>
+
+        <div class="footer-buttons no-print">
+            <button class="btn btn-save" onclick="salvarPedido()">💾 SALVAR</button>
+            <button class="btn btn-print" onclick="imprimirGeral()">🖨️ COMPLETO</button>
+            <button class="btn btn-lab" onclick="imprimirLaboratorio()">🧪 LAB</button>
+            <button class="btn btn-new" onclick="novoPedido()">📄 NOVO</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 2. CONFIGURAÇÃO DO SUPABASE (AQUI VOCÊ COLA AS CHAVES) ---
+        const _supabase = supabase.createClient('https://gxeuheqhpsapigyozanu.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4ZXVoZXFocHNhcGlneW96YW51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNzU3NDcsImV4cCI6MjA4OTc1MTc0N30.h_Yqrj959cpXFKSYO3wrvGQ7RXO5QEL2NeRy1QqfQJc');
+        const TABELA = 'pedidos';
+
+        const listaLentes = [
+            { cod: "101", tipo: "Bifocal", nome: "BIFOCAL ULTREX", preco: 180.00 },
+            { cod: "201", tipo: "Multifocal", nome: "VARILUX COMFORT MAX", preco: 1250.00 },
+            { cod: "301", tipo: "Multifocal Acabado", nome: "MULTIFOCAL EASY ACABADO", preco: 450.00 },
+            { cod: "401", tipo: "Visão Simples Surfaçado", nome: "ORMA 1.50 SURFAÇADO", preco: 220.00 },
+            { cod: "501", tipo: "Visão Simples Acabado", nome: "VS 1.56 BLUE CUT ACABADO", preco: 150.00 },
+            { cod: "601", tipo: "Visão Intermediaria", nome: "LENTE OFFICE 2.0", preco: 380.00 },
+            { cod: "602", tipo: "Visão Intermediaria", nome: "INTERVIEW", preco: 438.25 }
+        ];
+
+        const tabelaTratamentos = {
+            "Sem AR": 0,
+            "Padrão": 80.00,
+            "Crizal Sapphire": 350.00,
+            "Crizal Rock": 280.00,
+            "Blue Cut": 120.00,
+            "No-Reflex": 100.00,
+            "C.O. Clean": 237.00
+        };
+
+        // --- 3. FUNÇÕES DE SALVAMENTO E CARREGAMENTO (AJUSTADAS PARA SUPABASE) ---
+        async function salvarPedido() {
+            const os = document.getElementById('num_os').value;
+            const nome = document.getElementById('nome_cliente').value;
+            if(!os || !nome) return alert("Preencha Nome e O.S.");
+
+            const dados = {};
+            document.querySelectorAll('input, select, textarea').forEach(el => { if(el.id) dados[el.id] = el.value; });
+
+            // Envia para o Supabase
+            const { error } = await _supabase.from(TABELA).upsert(dados, { onConflict: 'num_os' });
+
+            if (error) {
+                alert("Erro ao salvar: " + error.message);
+            } else {
+                alert("Pedido salvo com sucesso no Banco de Dados!");
+                atualizarSelectBusca();
+            }
+        }
+
+        async function carregarPedidoSelecionado(os) {
+            if(!os) return;
+            // Busca no Supabase
+            const { data: p, error } = await _supabase.from(TABELA).select('*').eq('num_os', os).single();
+
+            if(p) {
+                Object.keys(p).forEach(k => {
+                    const el = document.getElementById(k);
+                    if(el) {
+                        if(k.includes('tipo_lente')) {
+                            el.value = p[k];
+                            filtrarLentes(k.split('_')[2]);
+                        }
+                        el.value = p[k];
+                    }
+                });
+                calcularTotal(); 
+                alert("Pedido carregado do Banco de Dados!");
+            }
+        }
+
+        async function atualizarSelectBusca() {
+            const select = document.getElementById('select_busca');
+            // Busca todos os pedidos no Supabase para preencher a lista
+            const { data: pedidos, error } = await _supabase.from(TABELA).select('num_os, nome_cliente').order('num_os', { ascending: false });
+
+            select.innerHTML = '<option value="">-- Selecione um Pedido --</option>';
+            if (pedidos) {
+                pedidos.forEach(p => {
+                    const opt = new Option(`${p.num_os} | ${p.nome_cliente}`, p.num_os);
+                    select.add(opt);
+                });
+            }
+        }
+
+        // --- MANTIVE SUAS FUNÇÕES ORIGINAIS DE CÁLCULO E MÁSCARA ABAIXO ---
+        function mascaraCPF(i) {
+            let v = i.value.replace(/\D/g, "");
+            v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d)/, "$1.$2");
+            v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); i.value = v;
+        }
+        function mascaraTel(i) {
+            let v = i.value.replace(/\D/g, "");
+            v = v.replace(/^(\d{2})(\d)/g, "($1) $2"); v = v.replace(/(\d{5})(\d)/, "$1-$2"); i.value = v;
+        }
+        function mascaraCEP(i) {
+            let v = i.value.replace(/\D/g, "");
+            v = v.replace(/^(\d{5})(\d)/, "$1-$2"); i.value = v;
+        }
+
+        function imprimirGeral() { document.body.classList.remove('modo-lab'); window.print(); }
+        function imprimirLaboratorio() { document.body.classList.add('modo-lab'); window.print(); }
+        function novoPedido() { if(confirm("Limpar formulário?")) location.reload(); }
+
+        function preencherSeletores() {
+            const fmt = (n) => (n > 0 ? "+" : "") + n.toFixed(2).replace('.', ',');
+            document.querySelectorAll('.sel-esf').forEach(s => {
+                s.add(new Option("", ""));
+                for (let i = 15; i >= -20; i -= 0.25) s.add(new Option(i === 0 ? "0,00 (Plano)" : fmt(i), i.toFixed(2)));
+            });
+            document.querySelectorAll('.sel-cil').forEach(s => {
+                s.add(new Option("", "")); s.add(new Option("0,00", "0.00"));
+                for (let i = -0.25; i >= -8; i -= 0.25) s.add(new Option(i.toFixed(2).replace('.', ','), i.toFixed(2)));
+            });
+            document.querySelectorAll('.sel-eixo').forEach(s => { s.add(new Option("", "")); for (let i = 0; i <= 180; i++) s.add(new Option(i + "°", i)); });
+            document.querySelectorAll('.sel-add').forEach(s => { s.add(new Option("", "")); for (let i = 0; i <= 4.5; i += 0.25) s.add(new Option(fmt(i), i.toFixed(2))); });
+        }
+
+        function atualizarTudo() {
+            ['od', 'oe'].forEach(l => {
+                const esf = parseFloat(document.getElementById(`e_${l}_l`).value) || 0;
+                const add = parseFloat(document.getElementById(`add_${l}`).value) || 0;
+                const dnp = parseFloat(document.getElementById(`dnp_${l}_l`).value) || 0;
+                if(document.getElementById(`e_${l}_l`).value || document.getElementById(`add_${l}`).value) {
+                    const t = esf + add; document.getElementById(`e_${l}_p`).value = t === 0 ? "Plano" : (t > 0 ? "+" : "") + t.toFixed(2).replace('.', ',');
+                }
+                const cilOp = document.getElementById(`c_${l}_l`).options[document.getElementById(`c_${l}_l`).selectedIndex];
+                document.getElementById(`c_${l}_p`).value = (cilOp && cilOp.value) ? cilOp.text : "";
+                document.getElementById(`x_${l}_p`).value = document.getElementById(`x_${l}_l`).value ? document.getElementById(`x_${l}_l`).value + "°" : "";
+                document.getElementById(`dnp_${l}_p`).value = dnp ? (dnp - 2.5).toFixed(1).replace('.', ',') : "";
+                document.getElementById(`alt_${l}_p`).value = document.getElementById(`alt_${l}_l`).value;
+            });
+            calcularDiametro();
+        }
+
+        function calcularDiametro() {
+            const p = parseFloat(document.getElementById('m_ponte').value) || 0, ah = parseFloat(document.getElementById('m_aro_h').value) || 0, am = parseFloat(document.getElementById('m_aro_m').value) || 0;
+            const dnp = Math.max(parseFloat(document.getElementById('dnp_od_l').value) || 0, parseFloat(document.getElementById('dnp_oe_l').value) || 0);
+            if(p && ah && am && dnp) document.getElementById('m_diametro').value = "Ø " + Math.ceil((p + ah) - (dnp * 2) + (am + 2));
+            else document.getElementById('m_diametro').value = "";
+        }
+
+        function filtrarLentes(l) {
+            const t = document.getElementById(`tipo_lente_${l}`).value, s = document.getElementById(`nome_lente_${l}`);
+            s.innerHTML = '<option value=""></option>'; listaLentes.filter(x => x.tipo === t).forEach(x => s.add(new Option(x.nome, x.nome)));
+        }
+
+        function buscarPorCodigo(l) {
+            const c = document.getElementById(`cod_lente_${l}`).value, x = listaLentes.find(i => i.cod === c);
+            if(x) { 
+                document.getElementById(`tipo_lente_${l}`).value = x.tipo; 
+                filtrarLentes(l); 
+                document.getElementById(`nome_lente_${l}`).value = x.nome; 
+                atualizarPrecoAutomatico();
+            }
+        }
+
+        function buscarPorNome(l) {
+            const n = document.getElementById(`nome_lente_${l}`).value, x = listaLentes.find(i => i.nome === n);
+            document.getElementById(`cod_lente_${l}`).value = x ? x.cod : "";
+            atualizarPrecoAutomatico();
+        }
+
+        function atualizarPrecoAutomatico() {
+            const codOD = document.getElementById('cod_lente_od').value;
+            const codOE = document.getElementById('cod_lente_oe').value;
+            const arOD = document.getElementById('ar_od').value;
+            const arOE = document.getElementById('ar_oe').value;
+
+            let totalLentes = 0;
+
+            const lenteOD = listaLentes.find(l => l.cod === codOD);
+            if (lenteOD) totalLentes += (lenteOD.preco / 2);
+
+            const lenteOE = listaLentes.find(l => l.cod === codOE);
+            if (lenteOE) totalLentes += (lenteOE.preco / 2);
+
+            totalLentes += (tabelaTratamentos[arOD] || 0) / 2;
+            totalLentes += (tabelaTratamentos[arOE] || 0) / 2;
+
+            document.getElementById('vlr_lentes').value = totalLentes.toFixed(2);
+            calcularTotal();
+        }
+
+        function calcularTotal() {
+            const armacao = parseFloat(document.getElementById('vlr_armacao').value) || 0;
+            const lentes = parseFloat(document.getElementById('vlr_lentes').value) || 0;
+            const desconto = parseFloat(document.getElementById('vlr_desconto').value) || 0;
+            const totalVenda = (armacao + lentes) - desconto;
+            document.getElementById('vlr_total').value = totalVenda.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        window.onload = function() { 
+            preencherSeletores(); 
+            atualizarSelectBusca();
+            document.getElementById('data_os').value = new Date().toISOString().split('T')[0]; 
+        };
+    </script>
+</body>
+</html>
