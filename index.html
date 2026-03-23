@@ -10,7 +10,7 @@
         * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #e9ecef; margin: 0; padding: 5px; display: flex; flex-direction: column; align-items: center; }
 
-        /* A ÚNICA ALTERAÇÃO SOLICITADA: OCULTAR SETAS */
+        /* OCULTAR SETAS - SEU PEDIDO ORIGINAL */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button { -webkit-appearance: none !important; margin: 0 !important; }
         input[type=number] { -moz-appearance: textfield !important; appearance: none !important; }
@@ -60,7 +60,7 @@
 <body>
 
 <div id="login-screen">
-    <img src="https://i.ibb.co/hxp4j2T9/logo.png" alt="Logo" style="height: 50px; margin-bottom: 20px;">
+    <img src="https://i.ibb.co/hxp4j2T9/logo.png" alt="Logo" style="height: 170px; margin-bottom: 10px;">
     <div class="login-box">
         <h3>Acesso AHV STORE</h3>
         <input type="text" id="user_login" placeholder="Usuário" onkeyup="if(event.key === 'Enter') document.getElementById('pass_login').focus()">
@@ -202,17 +202,21 @@
     const _supabase = supabase.createClient('https://gxeuheqhpsapigyozanu.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4ZXVoZXFocHNhcGlneW96YW51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNzU3NDcsImV4cCI6MjA4OTc1MTc0N30.h_Yqrj959cpXFKSYO3wrvGQ7RXO5QEL2NeRy1QqfQJc');
     const TABELA = 'pedidos';
 
-    function novoPedido() {
-        if(confirm("Deseja limpar os campos para um novo pedido?")) {
-            document.querySelectorAll('input, select, textarea').forEach(el => {
-                if(!['user_login','pass_login','select_busca'].includes(el.id)) {
-                    el.value = "";
-                }
-            });
-            document.getElementById('data_os').value = new Date().toISOString().split('T')[0];
-            document.getElementById('select_busca').value = "";
-        }
+    /* --- INICIO DO TEMPORIZADOR DE SEGURANÇA (20 MINUTOS) --- */
+    let tempoInativo;
+    function resetarTimer() {
+        clearTimeout(tempoInativo);
+        // 1200000ms = 20 minutos. Pode mudar esse valor se quiser mais ou menos tempo.
+        tempoInativo = setTimeout(fazerLogout, 300000); 
     }
+    // Monitora qualquer atividade do usuário
+    window.onload = resetarTimer;
+    window.onmousemove = resetarTimer;
+    window.onmousedown = resetarTimer;
+    window.ontouchstart = resetarTimer;
+    window.onclick = resetarTimer;
+    window.onkeydown = resetarTimer;
+    /* --- FIM DO TEMPORIZADOR --- */
 
     function imprimirGeral() { document.body.classList.remove('modo-lab'); window.print(); }
     function imprimirLaboratorio() { document.body.classList.add('modo-lab'); window.print(); }
@@ -222,12 +226,17 @@
         const pass = document.getElementById('pass_login').value;
         const email = user.includes('@') ? user : user + "@ahvstore.com";
         const { error } = await _supabase.auth.signInWithPassword({ email, password: pass });
-        if (error) return alert("Acesso Negado!");
+        if (error) return alert("Usuario ou Senha Invalidos!");
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('sistema-content').style.display = 'block';
+        resetarTimer(); // Inicia o cão de guarda ao logar
         atualizarSelectBusca();
     }
-    async function fazerLogout() { await _supabase.auth.signOut(); location.reload(); }
+
+    async function fazerLogout() { 
+        await _supabase.auth.signOut(); 
+        location.reload(); 
+    }
 
     async function salvarPedido() {
         const os = document.getElementById('num_os').value;
@@ -331,6 +340,20 @@
         totalLentes += (tabelaTratamentos[arOE] || 0) / 2;
         document.getElementById('vlr_lentes').value = totalLentes.toFixed(2);
         calcularTotal();
+    }
+
+    /* AJUSTE NA LIMPEZA DO FORMULÁRIO (PARA NÃO DESLOGAR) */
+    function novoPedido() {
+        if(confirm("Deseja limpar os campos para um novo pedido?")) {
+            document.querySelectorAll('input, select, textarea').forEach(el => {
+                if(!['user_login','pass_login','select_busca'].includes(el.id)) {
+                    el.value = "";
+                }
+            });
+            document.getElementById('data_os').value = new Date().toISOString().split('T')[0];
+            document.getElementById('select_busca').value = "";
+            resetarTimer(); // Reinicia o tempo de segurança ao começar novo pedido
+        }
     }
 
     window.onload = function() { preencherSeletores(); document.getElementById('data_os').value = new Date().toISOString().split('T')[0]; };
