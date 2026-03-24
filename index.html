@@ -149,14 +149,14 @@
           <div class="section-title">Lentes</div>
         <div class="eye-row lentes">
             <div class="eye-label">OD</div>
-            <div class="input-group" style="flex: 1.2;"><label>Tipo</label><select id="tipo_lente_od" onchange="filtrarLentes('od')"><option value=""></option><option>Visão Simples Acabado</option><option>Visão Simples Surfaçado</option><option>Synchrony Progressive</option><option>Zeiss Progressive</option><option>VDT Progressive</option><option>Funcional</option><option>Multifocal C.O.</option></select></div>
+            <div class="input-group" style="flex: 1.2;"><label>Tipo</label><select id="tipo_lente_od" onchange="filtrarLentes('od')"><option value=""></option><option>Visão Simples Acabado</option><option>Visão Simples Surfaçada</option><option>Synchrony Progressive</option><option>Zeiss Progressive</option><option>VDT Progressive</option><option>Funcional</option><option>Multifocal C.O.</option></select></div>
             <div class="input-group" style="flex: 0.6;"><label>Cód.</label><input type="text" id="cod_lente_od" oninput="buscarPorCodigo('od')"></div>
             <div class="input-group" style="flex: 2.2;"><label>Lente</label><select id="nome_lente_od" onchange="buscarPorNome('od')"><option value=""></option></select></div>
             <div class="input-group" style="flex: 1.2;"><label>AR</label><select id="ar_od" onchange="atualizarPrecoAutomatico()"><option value=""></option><option>Sem AR</option><option>Duravision Chrome UV</option><option>Duravision Silver UV</option><option>Duravision Platinum UV</option><option>Mar</option><option>Mar Extra</option><option>HMC Blue</option><option>C.O. Clean</option><option>HiperClean SHA</option><option>HiperClean Max+</option><option>HiperClean Dual+</option><option>HiperClean Blue</option></select></div>
         </div>
         <div class="eye-row lentes">
             <div class="eye-label">OE</div>
-            <div class="input-group" style="flex: 1.2;"><label>Tipo</label><select id="tipo_lente_oe" onchange="filtrarLentes('oe')"><option value=""></option><option>Visão Simples Acabado</option><option>Visão Simples Surfaçado</option><option>Synchrony Progressive</option><option>Zeiss Progressive</option><option>VDT Progressive</option><option>Funcional</option><option>Multifocal C.O.</option></select></div>
+            <div class="input-group" style="flex: 1.2;"><label>Tipo</label><select id="tipo_lente_oe" onchange="filtrarLentes('oe')"><option value=""></option><option>Visão Simples Acabado</option><option>Visão Simples Surfaçada</option><option>Synchrony Progressive</option><option>Zeiss Progressive</option><option>VDT Progressive</option><option>Funcional</option><option>Multifocal C.O.</option></select></div>
             <div class="input-group" style="flex: 0.6;"><label>Cód.</label><input type="text" id="cod_lente_oe" oninput="buscarPorCodigo('oe')"></div>
             <div class="input-group" style="flex: 2.2;"><label>Lente</label><select id="nome_lente_oe" onchange="buscarPorNome('oe')"><option value=""></option></select></div>
             <div class="input-group" style="flex: 1.2;"><label>AR</label><select id="ar_oe" onchange="atualizarPrecoAutomatico()"><option value=""></option><option>Sem AR</option><option>Duravision Chrome UV</option><option>Duravision Silver UV</option><option>Duravision Platinum UV</option><option>Mar</option><option>Mar Extra</option><option>HMC Blue</option><option>C.O. Clean</option><option>HiperClean SHA</option><option>HiperClean Max+</option><option>HiperClean Dual+</option><option>HiperClean Blue</option></select></div>
@@ -279,12 +279,12 @@
 const listaLentes = [
         { cod: "001", tipo: "Visão Simples Acabado", nome: "VS 1.56 BLUE CUT ACABADO", preco: 150.00 },
 
-        { cod: "100", tipo: "Visão Simples Surfaçado", nome: "Synchrony VS 1.50", preco: 300.00 },
-        { cod: "101", tipo: "Visão Simples Surfaçado", nome: "Synchrony VS 1.50 Photo", preco: 607.00 },
-        { cod: "102", tipo: "Visão Simples Surfaçado", nome: "Synchrony VS Poli", preco: 455.00 },
-        { cod: "103", tipo: "Visão Simples Surfaçado", nome: "Synchrony VS Poli Photo", preco: 758.00 },
-        { cod: "104", tipo: "Visão Simples Surfaçado", nome: "Synchrony VS 1.67", preco: 909.00 },
-        { cod: "105", tipo: "Visão Simples Surfaçado", nome: "Synchrony VS 1.67 Photo", preco: 1061.00 },
+        { cod: "100", tipo: "Visão Simples Surfaçada", nome: "Synchrony VS 1.50", preco: 300.00 },
+        { cod: "101", tipo: "Visão Simples Surfaçada", nome: "Synchrony VS 1.50 Photo", preco: 607.00 },
+        { cod: "102", tipo: "Visão Simples Surfaçada", nome: "Synchrony VS Poli", preco: 455.00 },
+        { cod: "103", tipo: "Visão Simples Surfaçada", nome: "Synchrony VS Poli Photo", preco: 758.00 },
+        { cod: "104", tipo: "Visão Simples Surfaçada", nome: "Synchrony VS 1.67", preco: 909.00 },
+        { cod: "105", tipo: "Visão Simples Surfaçada", nome: "Synchrony VS 1.67 Photo", preco: 1061.00 },
         { cod: "106", tipo: "Visão Simples Surfaçada.", nome: "Vião Simples C. O. 1.50 (70mm)", preco: 276.00 },
         { cod: "107", tipo: "Visão Simples Surfaçada.", nome: "Vião Simples C. O. 1.50 (76mm)", preco: 300.00 },
         { cod: "108", tipo: "Visão Simples Surfaçada.", nome: "Vião Simples C. O. 1.50 Photo Gray", preco: 599.00 },
