@@ -10,14 +10,35 @@
         * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #e9ecef; margin: 0; padding: 5px; display: flex; flex-direction: column; align-items: center; }
 
-        /* OCULTAR SETAS - SEU PEDIDO ORIGINAL */
+        /* OCULTAR SETAS */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button { -webkit-appearance: none !important; margin: 0 !important; }
         input[type=number] { -moz-appearance: textfield !important; appearance: none !important; }
 
-        #login-screen { position: fixed; inset: 0; background: var(--primary); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        .login-box { background: white; padding: 25px; border-radius: 10px; display: flex; flex-direction: column; gap: 12px; width: 300px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-        .login-box h3 { color: #333; margin: 0; text-align: center; }
+        /* TELA DE LOGIN BRANCA */
+        #login-screen { 
+            position: fixed; 
+            inset: 0; 
+            background: #ffffff; 
+            z-index: 9999; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            color: #333; 
+        }
+        .login-box { 
+            background: #f8f9fa; 
+            padding: 25px; 
+            border-radius: 10px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            width: 300px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+            border: 1px solid #ddd;
+        }
+        .login-box h3 { color: #1a237e; margin: 0; text-align: center; }
         .login-box input { height: 40px; border: 1px solid #ddd; padding: 8px; color: #333; border-radius: 5px; }
         .login-box button { height: 45px; background: var(--secondary); color: white; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; }
 
@@ -36,7 +57,6 @@
         .logo img { height: 40px; }
         .store-info { text-align: right; font-size: 8px; color: #666; line-height: 1.1; }
         .toolbar { width: 100%; background: #333; padding: 8px 15px; display: flex; gap: 15px; border-radius: 8px 8px 0 0; align-items: center; color: white; }
-        
         .footer-buttons { display: flex; gap: 10px; margin-top: auto; padding-top: 8px; justify-content: center; }
         .btn { width: 55px; height: 45px; border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .btn-save { background: var(--secondary); }
@@ -44,7 +64,6 @@
         .btn-lab { background: var(--lab); }
         .btn-new { background: #777; }
         .btn:hover { transform: translateY(-3px); filter: brightness(1.1); box-shadow: 0 5px 10px rgba(0,0,0,0.2); }
-
         .search-select { flex: 2; background: #444; color: white; border: 1px solid #555; height: 30px; border-radius: 4px; }
 
         @media print { 
@@ -146,7 +165,7 @@
             <div class="input-group"><label>Altura</label><input type="text" id="alt_oe_p"></div>
         </div>
 
-          <div class="section-title">Lentes</div>
+        <div class="section-title">Lentes</div>
         <div class="eye-row lentes">
             <div class="eye-label">OD</div>
             <div class="input-group" style="flex: 1.2;"><label>Tipo</label><select id="tipo_lente_od" onchange="filtrarLentes('od')"><option value=""></option><option>Visão Simples Acabado</option><option>Visão Simples Surfaçada</option><option>Synchrony Progressive</option><option>Zeiss Progressive</option><option>VDT Progressive</option><option>Funcional</option><option>Multifocal C.O.</option></select></div>
@@ -167,7 +186,7 @@
             <div class="input-group"><label>Material</label><select id="material_arma"><option value=""></option><option>Acetato</option><option>Metal</option><option>Fio de Nylon</option><option>Parafuso</option></select></div>
             <div class="input-group"><label>Estado</label><select id="estado_arma"><option value=""></option><option>Novo</option><option>Usado</option></select></div>
             <div class="input-group" style="flex: 2;"><label>Marca / Referência / Cor</label><input type="text" id="ref_arma"></div>
-      </div>
+        </div>
         <div class="eye-row">
             <div class="input-group"><label>Ponte</label><input type="number" id="m_ponte" oninput="calcularDiametro()"></div>
             <div class="input-group"><label>Aro Horiz.</label><input type="number" id="m_aro_h" oninput="calcularDiametro()"></div>
@@ -202,21 +221,17 @@
     const _supabase = supabase.createClient('https://gxeuheqhpsapigyozanu.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4ZXVoZXFocHNhcGlneW96YW51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNzU3NDcsImV4cCI6MjA4OTc1MTc0N30.h_Yqrj959cpXFKSYO3wrvGQ7RXO5QEL2NeRy1QqfQJc');
     const TABELA = 'pedidos';
 
-    /* --- INICIO DO TEMPORIZADOR DE SEGURANÇA (20 MINUTOS) --- */
     let tempoInativo;
     function resetarTimer() {
         clearTimeout(tempoInativo);
-        // 1200000ms = 20 minutos. Pode mudar esse valor se quiser mais ou menos tempo.
-        tempoInativo = setTimeout(fazerLogout, 300000); 
+        tempoInativo = setTimeout(fazerLogout, 1200000); 
     }
-    // Monitora qualquer atividade do usuário
     window.onload = resetarTimer;
     window.onmousemove = resetarTimer;
     window.onmousedown = resetarTimer;
     window.ontouchstart = resetarTimer;
     window.onclick = resetarTimer;
     window.onkeydown = resetarTimer;
-    /* --- FIM DO TEMPORIZADOR --- */
 
     function imprimirGeral() { document.body.classList.remove('modo-lab'); window.print(); }
     function imprimirLaboratorio() { document.body.classList.add('modo-lab'); window.print(); }
@@ -229,14 +244,11 @@
         if (error) return alert("Usuario ou Senha Invalidos!");
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('sistema-content').style.display = 'block';
-        resetarTimer(); // Inicia o cão de guarda ao logar
+        resetarTimer();
         atualizarSelectBusca();
     }
 
-    async function fazerLogout() { 
-        await _supabase.auth.signOut(); 
-        location.reload(); 
-    }
+    async function fazerLogout() { await _supabase.auth.signOut(); location.reload(); }
 
     async function salvarPedido() {
         const os = document.getElementById('num_os').value;
@@ -276,7 +288,7 @@
         }
     }
 
-const listaLentes = [
+    const listaLentes = [
         { cod: "001", tipo: "Visão Simples Acabado", nome: "VS 1.56 BLUE CUT ACABADO", preco: 150.00 },
         { cod: "100", tipo: "Visão Simples Surfaçada", nome: "Synchrony VS 1.50", preco: 300.00 },
         { cod: "101", tipo: "Visão Simples Surfaçada", nome: "Synchrony VS 1.50 Photo", preco: 607.00 },
@@ -373,11 +385,10 @@ const listaLentes = [
         { cod: "309", tipo: "Funcional", nome: "VisionDT Business 1.60", preco: 732.00 },
         { cod: "310", tipo: "Funcional", nome: "VisionDT Business 1.67", preco: 1404.00 },
         { cod: "311", tipo: "Funcional", nome: "VisionDT Business 1.67 Blue UV", preco: 1524.00 },
-        { cod: "605", tipo: "Funcional", nome: "INTERVIEW", preco: 438.25 }    
-    
+        { cod: "605", tipo: "Funcional", nome: "INTERVIEW", preco: 438.25 }  
     ];
 
-    const tabelaTratamentos = { "Sem AR": 0, "Duravision Chrome UV": 400, "Duravision Silver UV": 890, "Duravision Platinum UV": 1150, "Mar": 199, "Mar Extra": 299, "HMC Blue": 399, "C.O. Clean": 99, "HiperClean SHA": 132, "HiperClean SHA": 132, "HiperClean Max+": 245, "HiperClean Dual+": 316, "HiperClean Blue": 316 };
+    const tabelaTratamentos = { "Sem AR": 0, "Duravision Chrome UV": 400, "Duravision Silver UV": 890, "Duravision Platinum UV": 1150, "Mar": 199, "Mar Extra": 299, "HMC Blue": 399, "C.O. Clean": 99, "HiperClean SHA": 132, "HiperClean Max+": 245, "HiperClean Dual+": 316, "HiperClean Blue": 316 };
 
     function preencherSeletores() {
         const fmt = (n) => (n > 0 ? "+" : "") + n.toFixed(2).replace('.', ',');
@@ -419,7 +430,7 @@ const listaLentes = [
     function filtrarLentes(l) { const t = document.getElementById(`tipo_lente_${l}`).value, s = document.getElementById(`nome_lente_${l}`); s.innerHTML = '<option value=""></option>'; listaLentes.filter(x => x.tipo === t).forEach(x => s.add(new Option(x.nome, x.nome))); }
     function buscarPorCodigo(l) { const c = document.getElementById(`cod_lente_${l}`).value, x = listaLentes.find(i => i.cod === c); if(x) { document.getElementById(`tipo_lente_${l}`).value = x.tipo; filtrarLentes(l); document.getElementById(`nome_lente_${l}`).value = x.nome; atualizarPrecoAutomatico(); } }
     function buscarPorNome(l) { const n = document.getElementById(`nome_lente_${l}`).value, x = listaLentes.find(i => i.nome === n); document.getElementById(`cod_lente_${l}`).value = x ? x.cod : ""; atualizarPrecoAutomatico(); }
-    
+
     function atualizarPrecoAutomatico() {
         const codOD = document.getElementById('cod_lente_od').value;
         const codOE = document.getElementById('cod_lente_oe').value;
@@ -434,7 +445,6 @@ const listaLentes = [
         calcularTotal();
     }
 
-    /* AJUSTE NA LIMPEZA DO FORMULÁRIO (PARA NÃO DESLOGAR) */
     function novoPedido() {
         if(confirm("Deseja limpar os campos para um novo pedido?")) {
             document.querySelectorAll('input, select, textarea').forEach(el => {
@@ -444,11 +454,12 @@ const listaLentes = [
             });
             document.getElementById('data_os').value = new Date().toISOString().split('T')[0];
             document.getElementById('select_busca').value = "";
-            resetarTimer(); // Reinicia o tempo de segurança ao começar novo pedido
+            resetarTimer();
         }
     }
 
     window.onload = function() { preencherSeletores(); document.getElementById('data_os').value = new Date().toISOString().split('T')[0]; };
 </script>
+
 </body>
 </html>
