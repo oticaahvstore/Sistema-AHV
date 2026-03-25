@@ -6,65 +6,108 @@
     <title>Sistema de Pedidos - ÓTICA AHV STORE</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #1a237e; --secondary: #4CAF50; --lab: #9C27B0; --border: #d1d9e0; --input-height: 28px; }
+        :root { 
+            --primary: #1a237e; 
+            --secondary: #4CAF50; 
+            --lab: #9C27B0; 
+            --border: #888; 
+            --input-height: 28px; 
+            --radius: 8px; 
+        }
         * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #e9ecef; margin: 0; padding: 5px; display: flex; flex-direction: column; align-items: center; }
+        
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background: #e2e8f0; 
+            margin: 0; 
+            padding: 10px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
 
-        /* OCULTAR SETAS */
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button { -webkit-appearance: none !important; margin: 0 !important; }
-        input[type=number] { -moz-appearance: textfield !important; appearance: none !important; }
+        /* TELA DE LOGIN */
+        #login-screen { position: fixed; inset: 0; background: #ffffff; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .login-box { background: #ffffff; padding: 30px; border-radius: 15px; display: flex; flex-direction: column; gap: 15px; width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 2px solid var(--border); }
+        .login-box input { height: 40px; border: 1px solid var(--border); padding: 10px; border-radius: var(--radius); }
+        .login-box button { height: 45px; background: var(--secondary); color: white; border: none; font-weight: bold; border-radius: var(--radius); cursor: pointer; }
 
-        /* TELA DE LOGIN BRANCA */
-        #login-screen { position: fixed; inset: 0; background: #ffffff; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #333; }
-        .login-box { background: #f8f9fa; padding: 25px; border-radius: 10px; display: flex; flex-direction: column; gap: 12px; width: 300px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); border: 1px solid #ddd; }
-        .login-box h3 { color: #1a237e; margin: 0; text-align: center; }
-        .login-box input { height: 40px; border: 1px solid #ddd; padding: 8px; color: #333; border-radius: 5px; }
-        .login-box button { height: 45px; background: var(--secondary); color: white; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; }
-
-        #sistema-content { display: none; width: 210mm; }
-        .page { width: 100%; min-height: 290mm; padding: 10px 15px; background: #fff; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
-        .section-title { color: var(--primary); font-weight: 700; margin: 6px 0 3px; padding-left: 8px; border-left: 4px solid var(--primary); text-transform: uppercase; font-size: 10px; }
-        .eye-row { display: flex; align-items: flex-end; gap: 6px; margin-bottom: 3px; background: #fdfdfd; padding: 4px 10px; border-radius: 6px; border: 1px solid #eef2f7; }
-        .eye-row.perto { background: #fffcf0; border-color: #f3e5ab; }
-        .eye-row.lentes { background: #f0f7ff; border-color: #bcd7ff; }
-        .eye-label { background: #fff; border: 1px solid var(--border); border-radius: 6px; width: 40px; height: var(--input-height); display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--primary); flex-shrink: 0; font-size: 10px; }
+        /* LARGURA COMPACTA */
+        #sistema-content { display: none; width: 190mm; } 
+        
+        .toolbar { width: 100%; background: #333; padding: 8px 15px; display: flex; gap: 10px; border-radius: 12px 12px 0 0; align-items: center; color: white; border: 1px solid #000; }
+        .page { width: 100%; min-height: 290mm; padding: 15px; background: #fff; border-radius: 0 0 12px 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; border: 2px solid #555; }
+        
+        .section-title { color: var(--primary); font-weight: 800; margin: 8px 0 4px; padding-left: 8px; border-left: 5px solid var(--primary); text-transform: uppercase; font-size: 10px; }
+        
+        .eye-row { 
+            display: flex; 
+            align-items: flex-end; 
+            gap: 6px; 
+            margin-bottom: 5px; 
+            background: #f8f9fa; 
+            padding: 6px 10px; 
+            border-radius: var(--radius); 
+            border: 1.5px solid #777; 
+        }
+        .eye-row.perto { background: #fffcf0; border-color: #b8860b; }
+        .eye-row.lentes { background: #f0f7ff; border-color: #4682b4; }
+        
+        .eye-label { background: #fff; border: 1.5px solid #555; border-radius: 6px; width: 38px; height: var(--input-height); display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--primary); font-size: 10px; }
+        
         .input-group { display: flex; flex-direction: column; flex: 1; }
-        .input-group label { font-size: 8px; color: #7f8c8d; font-weight: 700; margin-bottom: 1px; text-transform: uppercase; padding-left: 2px; }
-        select, input, textarea { height: var(--input-height); border: 1px solid var(--border); border-radius: 4px; font-size: 10px; padding: 0 6px; background: white; width: 100%; }
-        textarea { height: 45px; padding: 6px; resize: none; font-family: inherit; margin-top: 5px; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f3f5; padding-bottom: 5px; margin-bottom: 3px; }
-        .logo img { height: 40px; }
-        .store-info { text-align: right; font-size: 8px; color: #666; line-height: 1.1; }
-        .toolbar { width: 100%; background: #333; padding: 8px 15px; display: flex; gap: 15px; border-radius: 8px 8px 0 0; align-items: center; color: white; }
-        .footer-buttons { display: flex; gap: 10px; margin-top: auto; padding-top: 8px; justify-content: center; }
-        .btn { width: 55px; height: 45px; border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .input-group label { font-size: 8px; color: #333; font-weight: 800; margin-bottom: 1px; text-transform: uppercase; }
+        
+        select, input, textarea { 
+            height: var(--input-height); 
+            border: 1px solid #666; 
+            border-radius: 6px; 
+            font-size: 10px; 
+            padding: 0 6px; 
+            background: white; 
+            width: 100%; 
+            color: #000;
+        }
+        textarea { height: 45px; padding: 6px; resize: none; margin-top: 4px; border: 1.5px solid #777; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 5px; margin-bottom: 5px; }
+        .logo img { height: 50px; } 
+        .store-info { text-align: right; font-size: 8px; color: #000; font-weight: bold; line-height: 1.1; }
+        
+        .footer-buttons { display: flex; gap: 10px; margin-top: 15px; justify-content: center; }
+        .btn { width: 55px; height: 45px; border: 1px solid #000; border-radius: 12px; color: white; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 6px rgba(0,0,0,0.2); }
         .btn-save { background: var(--secondary); }
         .btn-print { background: var(--primary); }
         .btn-lab { background: var(--lab); }
-        .btn-new { background: #777; }
-        .btn:hover { transform: translateY(-3px); filter: brightness(1.1); box-shadow: 0 5px 10px rgba(0,0,0,0.2); }
-        .search-select { flex: 2; background: #444; color: white; border: 1px solid #555; height: 30px; border-radius: 4px; }
+        .btn-new { background: #546e7a; }
+
+        .search-select { flex: 2; background: #444; color: white; border: 1px solid #000; height: 30px; border-radius: 8px; }
 
         @media print { 
             body { padding: 0; background: none; } 
             .no-print { display: none !important; } 
-            #sistema-content { display: block !important; }
-            .page { box-shadow: none; border: none; width: 210mm; height: 297mm; padding: 5mm; margin: 0; }
-            body.modo-lab .financeiro-section, body.modo-lab .sensivel { display: none !important; }
-            body.modo-lab .cliente-titulo::after { content: " (VIA LABORATÓRIO)"; }
+            #sistema-content { display: block !important; width: 210mm; }
+            .page { box-shadow: none; border: 1px solid #000; padding: 5mm; }
+            
+            select { -webkit-appearance: none; -moz-appearance: none; appearance: none; background: none !important; border: 1px solid #000 !important; }
+            input, select, textarea { box-shadow: none !important; border: 1px solid #000 !important; color: #000 !important; }
+
+            body.modo-lab .financeiro-section, 
+            body.modo-lab .sensivel { display: none !important; }
+            body.modo-lab .cliente-titulo::after { content: " (VIA LABORATÓRIO)"; color: var(--lab); font-size: 12px; margin-left: 10px; }
+            .eye-row { border: 1px solid #000 !important; }
         }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <img src="https://i.ibb.co/hxp4j2T9/logo.png" alt="Logo" style="height: 170px; margin-bottom: 10px;">
+    <img src="https://i.ibb.co/hxp4j2T9/logo.png" alt="Logo" style="height: 160px; margin-bottom: 15px;">
     <div class="login-box">
-        <h3>Acesso AHV STORE</h3>
+        <h3 style="text-align:center; color:var(--primary); margin-top:0;">AHV STORE</h3>
         <input type="text" id="user_login" placeholder="Usuário" onkeyup="if(event.key === 'Enter') document.getElementById('pass_login').focus()">
         <input type="password" id="pass_login" placeholder="Senha" onkeyup="if(event.key === 'Enter') fazerLogin()">
-        <button onclick="fazerLogin()">ENTRAR</button>
+        <button onclick="fazerLogin()">ACESSAR</button>
     </div>
 </div>
 
@@ -74,7 +117,7 @@
         <select id="select_busca" class="search-select" onchange="carregarPedidoSelecionado(this.value)">
             <option value="">-- Selecione um Pedido --</option>
         </select>
-        <button onclick="fazerLogout()" style="background:#cc0000; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:10px;">SAIR</button>
+        <button onclick="fazerLogout()" style="background:#cc0000; color:white; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-size:10px; font-weight:bold;">SAIR</button>
     </div>
 
     <div class="page" id="os-content">
@@ -88,23 +131,24 @@
 
         <div class="section-title cliente-titulo">Dados do Cliente</div>
         <div class="eye-row" style="background: white;">
-            <div class="input-group" style="flex: 0.4;"><label>Data</label><input type="date" id="data_os"></div>
-            <div class="input-group" style="flex: 0.4;"><label>O.S. Nº</label><input type="text" id="num_os"></div>
+            <div class="input-group" style="flex: 0.5;"><label>Data</label><input type="date" id="data_os"></div>
+            <div class="input-group" style="flex: 0.5;"><label>O.S. Nº</label><input type="text" id="num_os"></div>
             <div class="input-group" style="flex: 1.5;"><label>Nome Completo</label><input type="text" id="nome_cliente"></div>
-            <div class="input-group sensivel" style="flex: 0.7;"><label>CPF</label><input type="text" id="cpf_cliente" maxlength="14" oninput="mascaraCPF(this)"></div>
-            <div class="input-group sensivel" style="flex: 0.7;"><label>Telefone</label><input type="text" id="tel_cliente" maxlength="15" oninput="mascaraTel(this)"></div>
+            <div class="input-group sensivel" style="flex: 0.8;"><label>CPF</label><input type="text" id="cpf_cliente" maxlength="14" oninput="mascaraCPF(this)"></div>
+            <div class="input-group sensivel" style="flex: 0.8;"><label>Telefone</label><input type="text" id="tel_cliente" maxlength="15" oninput="mascaraTel(this)"></div>
         </div>
 
         <div class="eye-row sensivel" style="background: white;">
-            <div class="input-group" style="flex: 2.5;"><label>Rua / Logradouro</label><input type="text" id="rua_cliente"></div>
-            <div class="input-group" style="flex: 0.5;"><label>Nº</label><input type="text" id="num_end_cliente"></div>
+            <div class="input-group" style="flex: 2.2;"><label>Endereço</label><input type="text" id="rua_cliente"></div>
+            <div class="input-group" style="flex: 0.4;"><label>Nº</label><input type="text" id="num_end_cliente"></div>
             <div class="input-group" style="flex: 1;"><label>Complemento</label><input type="text" id="comp_cliente"></div>
             <div class="input-group" style="flex: 0.7;"><label>CEP</label><input type="text" id="cep_cliente" maxlength="9" oninput="mascaraCEP(this)"></div>
         </div>
+        
         <div class="eye-row sensivel" style="background: white;">
-            <div class="input-group" style="flex: 1.2;"><label>Bairro</label><input type="text" id="bairro_cliente"></div>
-            <div class="input-group" style="flex: 1.2;"><label>Cidade</label><input type="text" id="cid_cliente"></div>
-            <div class="input-group" style="flex: 0.25;"><label>UF</label><input type="text" id="uf_cliente" maxlength="2"></div>
+            <div class="input-group"><label>Bairro</label><input type="text" id="bairro_cliente"></div>
+            <div class="input-group"><label>Cidade</label><input type="text" id="cid_cliente"></div>
+            <div class="input-group" style="flex: 0.3;"><label>UF</label><input type="text" id="uf_cliente" maxlength="2"></div>
         </div>
 
         <div class="section-title">Prescrição Longe (PL)</div>
@@ -165,23 +209,23 @@
         <div class="eye-row" style="background: white;">
             <div class="input-group"><label>Material</label><select id="material_arma"><option value=""></option><option>Acetato</option><option>Metal</option><option>Fio de Nylon</option><option>Parafuso</option></select></div>
             <div class="input-group"><label>Estado</label><select id="estado_arma"><option value=""></option><option>Novo</option><option>Usado</option></select></div>
-            <div class="input-group" style="flex: 2;"><label>Marca / Referência / Cor</label><input type="text" id="ref_arma"></div>
+            <div class="input-group" style="flex: 2;"><label>Marca / Ref / Cor</label><input type="text" id="ref_arma"></div>
         </div>
         <div class="eye-row">
             <div class="input-group"><label>Ponte</label><input type="number" id="m_ponte" oninput="calcularDiametro()"></div>
-            <div class="input-group"><label>Aro Horiz.</label><input type="number" id="m_aro_h" oninput="calcularDiametro()"></div>
-            <div class="input-group"><label>Aro Vert.</label><input type="number" id="m_aro_v"></div>
+            <div class="input-group"><label>Aro Hor.</label><input type="number" id="m_aro_h" oninput="calcularDiametro()"></div>
+            <div class="input-group"><label>Aro Ver.</label><input type="number" id="m_aro_v"></div>
             <div class="input-group"><label>Aro Maior</label><input type="number" id="m_aro_m" oninput="calcularDiametro()"></div>
-            <div class="input-group" style="flex: 1.2;"><label style="color:var(--primary)">Ø Diâmetro Sug.</label><input type="text" id="m_diametro" readonly style="font-weight:bold; background:#e3f2fd; color:#1565c0;"></div>
+            <div class="input-group" style="flex: 1.2;"><label style="color:var(--primary)">Ø Sugerido</label><input type="text" id="m_diametro" readonly style="font-weight:bold; background:#e3f2fd; color:#1565c0; border: 1.5px solid #1565c0;"></div>
         </div>
 
         <div class="financeiro-section">
             <div class="section-title">Financeiro</div>
-            <div class="eye-row" style="background: #e8f5e9;">
+            <div class="eye-row" style="background: #e8f5e9; border-color: #2e7d32;">
                 <div class="input-group"><label>Armação (R$)</label><input type="number" id="vlr_armacao" step="0.01" oninput="calcularTotal()"></div>
                 <div class="input-group"><label>Lentes (R$)</label><input type="number" id="vlr_lentes" step="0.01" oninput="calcularTotal()"></div>
                 <div class="input-group"><label>Desconto (R$)</label><input type="number" id="vlr_desconto" step="0.01" oninput="calcularTotal()"></div>
-                <div class="input-group" style="flex: 1.2;"><label style="color:#2e7d32; font-weight:bold;">Total Venda</label><input type="text" id="vlr_total" readonly style="font-weight:bold; background:white; color:#1b5e20;"></div>
+                <div class="input-group" style="flex: 1.2;"><label style="color:#2e7d32; font-weight:bold;">Total Venda</label><input type="text" id="vlr_total" readonly style="font-weight:bold; background:white; color:#1b5e20; border: 1.5px solid #1b5e20;"></div>
             </div>
         </div>
 
@@ -201,19 +245,25 @@
     const _supabase = supabase.createClient('https://gxeuheqhpsapigyozanu.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4ZXVoZXFocHNhcGlneW96YW51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNzU3NDcsImV4cCI6MjA4OTc1MTc0N30.h_Yqrj959cpXFKSYO3wrvGQ7RXO5QEL2NeRy1QqfQJc');
     const TABELA = 'pedidos';
 
-    /* --- INICIO DO TEMPORIZADOR DE SEGURANÇA (20 MINUTOS) --- */
-    let tempoInativo;
-    function resetarTimer() { 
-        clearTimeout(tempoInativo); 
-        tempoInativo = setTimeout(fazerLogout, 300000); // 30.000ms = 5 minutos
+    /* --- TEMPORIZADOR DE SEGURANÇA (5 MINUTOS) --- */
+    let timerInatividade;
+    const TEMPO_LIMITE = 300000; // 5 minutos em milissegundos
+
+    function resetarTimer() {
+        if (typeof timerInatividade !== 'undefined') clearTimeout(timerInatividade);
+        timerInatividade = setTimeout(() => {
+            alert("Sessão encerrada por inatividade (5 minutos).");
+            fazerLogout();
+        }, TEMPO_LIMITE); 
     }
+
+    // Monitoramento de Atividade
     window.onload = resetarTimer;
-    window.onmousemove = resetarTimer;
-    window.onmousedown = resetarTimer;
-    window.ontouchstart = resetarTimer;
-    window.onclick = resetarTimer;
-    window.onkeydown = resetarTimer;
-    /* --- FIM DO TEMPORIZADOR --- */
+    document.onmousemove = resetarTimer;
+    document.onmousedown = resetarTimer;
+    document.onkeypress = resetarTimer;
+    document.ontouchstart = resetarTimer;
+    document.onclick = resetarTimer;
 
     function imprimirGeral() { document.body.classList.remove('modo-lab'); window.print(); }
     function imprimirLaboratorio() { document.body.classList.add('modo-lab'); window.print(); }
@@ -230,7 +280,10 @@
         atualizarSelectBusca();
     }
 
-    async function fazerLogout() { await _supabase.auth.signOut(); location.reload(); }
+    async function fazerLogout() { 
+        await _supabase.auth.signOut(); 
+        location.reload(); 
+    }
 
     async function salvarPedido() {
         const os = document.getElementById('num_os').value;
@@ -372,11 +425,6 @@
         { cod: "260", tipo: "Multifocal C.O.", nome: "Multi C.O. Select 1.67 Photo Gray", preco: 2000.00 },
         { cod: "261", tipo: "Multifocal C.O.", nome: "Multi C.O. Select 1,74", preco: 2875.00 },
         { cod: "262", tipo: "Multifocal C.O.", nome: "Multi C.O. Select 1.74 Photo Gray", preco: 3375.00 },
-        { cod: "263", tipo: "Multifocal C.O.", nome: "Multi C.O. PRO 1.50", preco: 238.00 },
-        { cod: "264", tipo: "Multifocal C.O.", nome: "Multi C.O. PRO 1.50 Photo Gray", preco: 614.00 },
-        { cod: "265", tipo: "Multifocal C.O.", nome: "Multi C.O. PRO 1.56 UV400", preco: 295.00 },
-        { cod: "266", tipo: "Multifocal C.O.", nome: "Multi C.O. PRO 1.56 Blue UV", preco: 389.00 },
-        { cod: "267", tipo: "Multifocal C.O.", nome: "Multi C.O. PRO 1.59 Poli", preco: 408.00 },
         { cod: "300", tipo: "Funcional", nome: "Synchrony Work & Office HD 1.50", preco: 250.00 },
         { cod: "301", tipo: "Funcional", nome: "Synchrony Work & Office HD Poli", preco: 380.00 },
         { cod: "302", tipo: "Funcional", nome: "Synchrony Work & Read HD 1.50", preco: 250.00 },
@@ -439,14 +487,9 @@
         const cilValor = parseFloat(document.getElementById(`c_${l}_l`).value) || 0;
 
         if (t === "Visão Simples Acabado") {
-            arSel.value = "Sem AR";
-            arSel.disabled = true;
-            arSel.style.background = "#eeeeee";
-            arSel.style.cursor = "not-allowed";
+            arSel.value = "Sem AR"; arSel.disabled = true; arSel.style.background = "#eeeeee";
         } else {
-            arSel.disabled = false;
-            arSel.style.background = "white";
-            arSel.style.cursor = "default";
+            arSel.disabled = false; arSel.style.background = "white";
         }
 
         s.innerHTML = '<option value=""></option>'; 
@@ -498,7 +541,7 @@
         }
     }
 
-    window.onload = function() { preencherSeletores(); document.getElementById('data_os').value = new Date().toISOString().split('T')[0]; };
+    window.onload = function() { preencherSeletores(); document.getElementById('data_os').value = new Date().toISOString().split('T')[0]; resetarTimer(); };
 </script>
 </body>
 </html>
