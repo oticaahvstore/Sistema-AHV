@@ -16,28 +16,8 @@
         input[type=number] { -moz-appearance: textfield !important; appearance: none !important; }
 
         /* TELA DE LOGIN BRANCA */
-        #login-screen { 
-            position: fixed; 
-            inset: 0; 
-            background: #ffffff; 
-            z-index: 9999; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            color: #333; 
-        }
-        .login-box { 
-            background: #f8f9fa; 
-            padding: 25px; 
-            border-radius: 10px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-            width: 300px; 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
-            border: 1px solid #ddd;
-        }
+        #login-screen { position: fixed; inset: 0; background: #ffffff; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #333; }
+        .login-box { background: #f8f9fa; padding: 25px; border-radius: 10px; display: flex; flex-direction: column; gap: 12px; width: 300px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); border: 1px solid #ddd; }
         .login-box h3 { color: #1a237e; margin: 0; text-align: center; }
         .login-box input { height: 40px; border: 1px solid #ddd; padding: 8px; color: #333; border-radius: 5px; }
         .login-box button { height: 45px; background: var(--secondary); color: white; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; }
@@ -131,7 +111,7 @@
         <div class="eye-row">
             <div class="eye-label">OD</div>
             <div class="input-group"><label>Esférico</label><select id="e_od_l" class="sel-esf" onchange="atualizarTudo()"></select></div>
-            <div class="input-group"><label>Cilíndrico</label><select id="c_od_l" class="sel-cil" onchange="atualizarTudo()"></select></div>
+            <div class="input-group"><label>Cilíndrico</label><select id="c_od_l" class="sel-cil" onchange="filtrarLentes('od'); atualizarTudo();"></select></div>
             <div class="input-group"><label>Eixo</label><select id="x_od_l" class="sel-eixo" onchange="atualizarTudo()"></select></div>
             <div class="input-group"><label>Adição</label><select id="add_od" class="sel-add" onchange="atualizarTudo()"></select></div>
             <div class="input-group"><label>DNP</label><input type="number" step="0.5" id="dnp_od_l" oninput="atualizarTudo()"></div>
@@ -140,7 +120,7 @@
         <div class="eye-row">
             <div class="eye-label">OE</div>
             <div class="input-group"><label>Esférico</label><select id="e_oe_l" class="sel-esf" onchange="atualizarTudo()"></select></div>
-            <div class="input-group"><label>Cilíndrico</label><select id="c_oe_l" class="sel-cil" onchange="atualizarTudo()"></select></div>
+            <div class="input-group"><label>Cilíndrico</label><select id="c_oe_l" class="sel-cil" onchange="filtrarLentes('oe'); atualizarTudo();"></select></div>
             <div class="input-group"><label>Eixo</label><select id="x_oe_l" class="sel-eixo" onchange="atualizarTudo()"></select></div>
             <div class="input-group"><label>Adição</label><select id="add_oe" class="sel-add" onchange="atualizarTudo()"></select></div>
             <div class="input-group"><label>DNP</label><input type="number" step="0.5" id="dnp_oe_l" oninput="atualizarTudo()"></div>
@@ -221,10 +201,11 @@
     const _supabase = supabase.createClient('https://gxeuheqhpsapigyozanu.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4ZXVoZXFocHNhcGlneW96YW51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNzU3NDcsImV4cCI6MjA4OTc1MTc0N30.h_Yqrj959cpXFKSYO3wrvGQ7RXO5QEL2NeRy1QqfQJc');
     const TABELA = 'pedidos';
 
+    /* --- INICIO DO TEMPORIZADOR DE SEGURANÇA (20 MINUTOS) --- */
     let tempoInativo;
-    function resetarTimer() {
-        clearTimeout(tempoInativo);
-        tempoInativo = setTimeout(fazerLogout, 1200000); 
+    function resetarTimer() { 
+        clearTimeout(tempoInativo); 
+        tempoInativo = setTimeout(fazerLogout, 300000); // 30.000ms = 5 minutos
     }
     window.onload = resetarTimer;
     window.onmousemove = resetarTimer;
@@ -232,6 +213,7 @@
     window.ontouchstart = resetarTimer;
     window.onclick = resetarTimer;
     window.onkeydown = resetarTimer;
+    /* --- FIM DO TEMPORIZADOR --- */
 
     function imprimirGeral() { document.body.classList.remove('modo-lab'); window.print(); }
     function imprimirLaboratorio() { document.body.classList.add('modo-lab'); window.print(); }
@@ -289,7 +271,24 @@
     }
 
     const listaLentes = [
-        { cod: "001", tipo: "Visão Simples Acabado", nome: "VS 1.56 BLUE CUT ACABADO", preco: 150.00 },
+        { cod: "001", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.56 FSV HCM", preco: 170.00 },
+        { cod: "002", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.56 FSV HCM Cyl Extension", preco: 220.00 },
+        { cod: "003", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.56 FSV Blue Cut HCM", preco: 270.00 },
+        { cod: "004", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.56 FSV Blue Cut HCM Cyl Extension", preco: 320.00 },
+        { cod: "005", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.59 PC FSV HCM", preco: 220.00 },
+        { cod: "006", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.59 PC FSV HCM Cyl Extension", preco: 280.00 },
+        { cod: "007", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.59 PC FSV Blue Cut HCM", preco: 350.00 },
+        { cod: "008", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.59 PC FSV Blue Cut HCM Cyl Extension", preco: 410.00 },
+        { cod: "009", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.61 FSV HCM", preco: 375.00 },
+        { cod: "010", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.61 FSV HCM Cyl Extension", preco: 450.00 },
+        { cod: "011", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.61 FSV Blue Cut HCM", preco: 490.00 },
+        { cod: "012", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.61 FSV Blue Cut HCM Cyl Extension", preco: 550.00 },
+        { cod: "013", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.56 FSV SunSense HCM", preco: 350.00 },
+        { cod: "014", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.56 FSV SunSense HCM Cyl Extension", preco: 400.00 },
+        { cod: "015", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.67 FSV HCM", preco: 530.00 },
+        { cod: "016", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.67 FSV HCM Cyl Extension", preco: 610.00 },
+        { cod: "017", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.67 FSV Blue Cut HCM", preco: 715.00 },
+        { cod: "018", tipo: "Visão Simples Acabado", nome: "Zurich Lens 1.67 FSV Blue Cut HCM Cyl Extension", preco: 815.00 },
         { cod: "100", tipo: "Visão Simples Surfaçada", nome: "Synchrony VS 1.50", preco: 300.00 },
         { cod: "101", tipo: "Visão Simples Surfaçada", nome: "Synchrony VS 1.50 Photo", preco: 607.00 },
         { cod: "102", tipo: "Visão Simples Surfaçada", nome: "Synchrony VS Poli", preco: 455.00 },
@@ -373,6 +372,11 @@
         { cod: "260", tipo: "Multifocal C.O.", nome: "Multi C.O. Select 1.67 Photo Gray", preco: 2000.00 },
         { cod: "261", tipo: "Multifocal C.O.", nome: "Multi C.O. Select 1,74", preco: 2875.00 },
         { cod: "262", tipo: "Multifocal C.O.", nome: "Multi C.O. Select 1.74 Photo Gray", preco: 3375.00 },
+        { cod: "263", tipo: "Multifocal C.O.", nome: "Multi C.O. PRO 1.50", preco: 238.00 },
+        { cod: "264", tipo: "Multifocal C.O.", nome: "Multi C.O. PRO 1.50 Photo Gray", preco: 614.00 },
+        { cod: "265", tipo: "Multifocal C.O.", nome: "Multi C.O. PRO 1.56 UV400", preco: 295.00 },
+        { cod: "266", tipo: "Multifocal C.O.", nome: "Multi C.O. PRO 1.56 Blue UV", preco: 389.00 },
+        { cod: "267", tipo: "Multifocal C.O.", nome: "Multi C.O. PRO 1.59 Poli", preco: 408.00 },
         { cod: "300", tipo: "Funcional", nome: "Synchrony Work & Office HD 1.50", preco: 250.00 },
         { cod: "301", tipo: "Funcional", nome: "Synchrony Work & Office HD Poli", preco: 380.00 },
         { cod: "302", tipo: "Funcional", nome: "Synchrony Work & Read HD 1.50", preco: 250.00 },
@@ -427,7 +431,37 @@
     function mascaraCPF(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); i.value = v; }
     function mascaraTel(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{2})(\d)/g, "($1) $2"); v = v.replace(/(\d{5})(\d)/, "$1-$2"); i.value = v; }
     function mascaraCEP(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{5})(\d)/, "$1-$2"); i.value = v; }
-    function filtrarLentes(l) { const t = document.getElementById(`tipo_lente_${l}`).value, s = document.getElementById(`nome_lente_${l}`); s.innerHTML = '<option value=""></option>'; listaLentes.filter(x => x.tipo === t).forEach(x => s.add(new Option(x.nome, x.nome))); }
+    
+    function filtrarLentes(l) { 
+        const t = document.getElementById(`tipo_lente_${l}`).value;
+        const s = document.getElementById(`nome_lente_${l}`);
+        const arSel = document.getElementById(`ar_${l}`);
+        const cilValor = parseFloat(document.getElementById(`c_${l}_l`).value) || 0;
+
+        if (t === "Visão Simples Acabado") {
+            arSel.value = "Sem AR";
+            arSel.disabled = true;
+            arSel.style.background = "#eeeeee";
+            arSel.style.cursor = "not-allowed";
+        } else {
+            arSel.disabled = false;
+            arSel.style.background = "white";
+            arSel.style.cursor = "default";
+        }
+
+        s.innerHTML = '<option value=""></option>'; 
+        let lentesFiltradas = listaLentes.filter(x => x.tipo === t);
+
+        if (t.includes("Visão Simples") && cilValor < -2.00) {
+            lentesFiltradas = lentesFiltradas.filter(x => x.nome.includes("Extension") || x.nome.includes("Extendido"));
+        } else if (t.includes("Visão Simples") && cilValor >= -2.00 && cilValor != 0) {
+            lentesFiltradas = lentesFiltradas.filter(x => !x.nome.includes("Extension") && !x.nome.includes("Extendido"));
+        }
+
+        lentesFiltradas.forEach(x => s.add(new Option(x.nome, x.nome))); 
+        atualizarPrecoAutomatico();
+    }
+
     function buscarPorCodigo(l) { const c = document.getElementById(`cod_lente_${l}`).value, x = listaLentes.find(i => i.cod === c); if(x) { document.getElementById(`tipo_lente_${l}`).value = x.tipo; filtrarLentes(l); document.getElementById(`nome_lente_${l}`).value = x.nome; atualizarPrecoAutomatico(); } }
     function buscarPorNome(l) { const n = document.getElementById(`nome_lente_${l}`).value, x = listaLentes.find(i => i.nome === n); document.getElementById(`cod_lente_${l}`).value = x ? x.cod : ""; atualizarPrecoAutomatico(); }
 
@@ -436,11 +470,16 @@
         const codOE = document.getElementById('cod_lente_oe').value;
         const arOD = document.getElementById('ar_od').value;
         const arOE = document.getElementById('ar_oe').value;
+        const tipoOD = document.getElementById('tipo_lente_od').value;
+        const tipoOE = document.getElementById('tipo_lente_oe').value;
+
         let totalLentes = 0;
         const lOD = listaLentes.find(l => l.cod === codOD); if (lOD) totalLentes += (lOD.preco / 2);
         const lOE = listaLentes.find(l => l.cod === codOE); if (lOE) totalLentes += (lOE.preco / 2);
-        totalLentes += (tabelaTratamentos[arOD] || 0) / 2;
-        totalLentes += (tabelaTratamentos[arOE] || 0) / 2;
+        
+        if (tipoOD !== "Visão Simples Acabado") totalLentes += (tabelaTratamentos[arOD] || 0) / 2;
+        if (tipoOE !== "Visão Simples Acabado") totalLentes += (tabelaTratamentos[arOE] || 0) / 2;
+
         document.getElementById('vlr_lentes').value = totalLentes.toFixed(2);
         calcularTotal();
     }
@@ -450,6 +489,7 @@
             document.querySelectorAll('input, select, textarea').forEach(el => {
                 if(!['user_login','pass_login','select_busca'].includes(el.id)) {
                     el.value = "";
+                    if(el.id.startsWith('ar_')) { el.disabled = false; el.style.background = "white"; }
                 }
             });
             document.getElementById('data_os').value = new Date().toISOString().split('T')[0];
@@ -460,6 +500,5 @@
 
     window.onload = function() { preencherSeletores(); document.getElementById('data_os').value = new Date().toISOString().split('T')[0]; };
 </script>
-
 </body>
 </html>
