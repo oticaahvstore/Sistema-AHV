@@ -222,10 +222,10 @@
         <div class="financeiro-section">
             <div class="section-title">Financeiro</div>
             <div class="eye-row" style="background: #e8f5e9; border-color: #2e7d32;">
-                <div class="input-group"><label>Armação (R$)</label><input type="number" id="vlr_armacao" step="0.01" oninput="calcularTotal()"></div>
-                <div class="input-group"><label>Lentes (R$)</label><input type="number" id="vlr_lentes" step="0.01" oninput="calcularTotal()"></div>
+                <div class="input-group"><label>Valor Armação</label><input type="number" id="vlr_armacao" step="0.01" oninput="calcularTotal()"></div>
+                <div class="input-group"><label>Valor Lentes</label><input type="number" id="vlr_lentes" step="0.01" oninput="calcularTotal()"></div>
                 <div class="input-group"><label>Desconto (R$)</label><input type="number" id="vlr_desconto" step="0.01" oninput="calcularTotal()"></div>
-                <div class="input-group" style="flex: 1.2;"><label style="color:#2e7d32; font-weight:bold;">Total Venda</label><input type="text" id="vlr_total" readonly style="font-weight:bold; background:white; color:#1b5e20; border: 1.5px solid #1b5e20;"></div>
+                <div class="input-group" style="flex: 1.2;"><label style="color:#2e7d32; font-weight:bold;">Total</label><input type="text" id="vlr_total" readonly style="font-weight:bold; background:white; color:#1b5e20; border: 1.5px solid #1b5e20;"></div>
             </div>
         </div>
 
@@ -234,9 +234,9 @@
 
         <div class="footer-buttons no-print">
             <button class="btn btn-save" title="Salvar" onclick="salvarPedido()">💾</button>
-            <button class="btn btn-print" title="Imprimir Completo" onclick="imprimirGeral()">🖨️</button>
-            <button class="btn btn-lab" title="Imprimir Laboratório" onclick="imprimirLaboratorio()">🔬</button>
-            <button class="btn btn-new" title="Novo Pedido" onclick="novoPedido()">📄</button>
+            <button class="btn btn-print" title="Via Cliente" onclick="imprimirGeral()">🖨️</button>
+            <button class="btn btn-lab" title="Via Pedido" onclick="imprimirLaboratorio()">🔬</button>
+            <button class="btn btn-new" title="Limpar Tela" onclick="novoPedido()">📄</button>
         </div>
     </div>
 </div>
@@ -245,9 +245,9 @@
     const _supabase = supabase.createClient('https://gxeuheqhpsapigyozanu.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4ZXVoZXFocHNhcGlneW96YW51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNzU3NDcsImV4cCI6MjA4OTc1MTc0N30.h_Yqrj959cpXFKSYO3wrvGQ7RXO5QEL2NeRy1QqfQJc');
     const TABELA = 'pedidos';
 
-    /* --- TEMPORIZADOR DE SEGURANÇA (5 MINUTOS) --- */
+    /* --- TEMPORIZADOR DE SEGURANÇA (1 MINUTOS) --- */
     let timerInatividade;
-    const TEMPO_LIMITE = 60000; // 5 minutos em milissegundos
+    const TEMPO_LIMITE = 60000; // 1 minutos em milissegundos
 
     function resetarTimer() {
         if (typeof timerInatividade !== 'undefined') clearTimeout(timerInatividade);
