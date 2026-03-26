@@ -247,7 +247,7 @@
 
     /* --- TEMPORIZADOR DE SEGURANÇA (5 MINUTOS) --- */
     let timerInatividade;
-    const TEMPO_LIMITE = 300000; // 5 minutos em milissegundos
+    const TEMPO_LIMITE = 60000; // 5 minutos em milissegundos
 
     function resetarTimer() {
         if (typeof timerInatividade !== 'undefined') clearTimeout(timerInatividade);
