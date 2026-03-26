@@ -104,7 +104,7 @@
 <div id="login-screen">
     <img src="https://i.ibb.co/hxp4j2T9/logo.png" alt="Logo" style="height: 160px; margin-bottom: 15px;">
     <div class="login-box">
-        <h3 style="text-align:center; color:var(--primary); margin-top:0;">AHV STORE</h3>
+        <h3 style="text-align:center; color:var(--primary); margin-top:0;">Bem Vindo!</h3>
         <input type="text" id="user_login" placeholder="Usuário" onkeyup="if(event.key === 'Enter') document.getElementById('pass_login').focus()">
         <input type="password" id="pass_login" placeholder="Senha" onkeyup="if(event.key === 'Enter') fazerLogin()">
         <button onclick="fazerLogin()">ACESSAR</button>
@@ -115,7 +115,7 @@
     <div class="toolbar no-print">
         <div style="font-size: 10px; font-weight: bold;">BUSCAR:</div>
         <select id="select_busca" class="search-select" onchange="carregarPedidoSelecionado(this.value)">
-            <option value="">-- Selecione um Pedido --</option>
+            <option value="">-- Selecione Cliente --</option>
         </select>
         <button onclick="fazerLogout()" style="background:#cc0000; color:white; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-size:10px; font-weight:bold;">SAIR</button>
     </div>
@@ -125,7 +125,7 @@
             <div class="logo"><img src="https://i.ibb.co/hxp4j2T9/logo.png" alt="Logo"></div>
             <div class="store-info">
                 <b>ÓTICA AHV STORE</b><br>
-                CNPJ: 58.938.512/0001-83 | WhatsApp: (11) 94854-5043
+                CNPJ: 58.938.512/0001-83 | WhatsApp: (11) 94854-5043 / (11) 96438-0652
             </div>
         </div>
 
@@ -252,7 +252,7 @@
     function resetarTimer() {
         if (typeof timerInatividade !== 'undefined') clearTimeout(timerInatividade);
         timerInatividade = setTimeout(() => {
-            alert("Sessão encerrada por inatividade (5 minutos).");
+            alert("Sessão encerrada por inatividade");
             fazerLogout();
         }, TEMPO_LIMITE); 
     }
