@@ -177,15 +177,20 @@
                 </select>
             </div>
 
-            <div style="width: 45px;">
+<div style="width: 45px;">
                 <label style="font-size: 11px; font-weight: bold; color: #1a237e;">Qtde.</label>
-                <input type="number" id="fin_qtde" value="1" style="width: 100%; height: 26px; border: 1px solid #999; text-align: center;">
+                <input type="number" id="fin_qtde" value="1" oninput="gerarParcelasVideo()" style="width: 100%; height: 26px; border: 1px solid #999; text-align: center;">
+            </div>
+
+            <div style="width: 55px;">
+                <label style="font-size: 11px; font-weight: bold; color: #1a237e;">Taxa %</label>
+                <input type="number" id="fin_taxa" value="0" step="0.01" oninput="gerarParcelasVideo()" style="width: 100%; height: 26px; border: 1px solid #999; text-align: center; background: #fffde7;">
             </div>
 
             <div style="width: 85px;">
                 <label style="font-size: 11px; font-weight: bold; color: #1a237e;">Intervalo</label>
                 <div style="display: flex; align-items: center; gap: 2px;">
-                    <input type="number" id="fin_intervalo" value="30" style="width: 100%; height: 26px; border: 1px solid #999; text-align: center;">
+                    <input type="number" id="fin_intervalo" value="30" oninput="gerarParcelasVideo()" style="width: 100%; height: 26px; border: 1px solid #999; text-align: center;">
                     <span style="font-size: 10px;">Dias</span>
                 </div>
             </div>
@@ -535,7 +540,11 @@ async function buscarSugestoes(valor) {
     }
 
 async function carregarPedidoSelecionado(numOS) {
-    if (!numOS) return;
+    // SE O USUÁRIO CLICAR NO ESPAÇO EM BRANCO (vazio), LIMPA A TELA
+    if (!numOS || numOS === "") {
+        limparCamposRapido(); 
+        return;
+    }
 
     const { data, error } = await _supabase
         .from('tabela_pedidos')
@@ -557,15 +566,13 @@ async function carregarPedidoSelecionado(numOS) {
             }
         });
 
-        // --- NOVO AQUI: Formatação de Moeda ---
-        // Isso garante as duas casas decimais (0,00) nos campos de valor
+        // Garante as duas casas decimais nos campos de valor
         if(data.vlr_armacao) document.getElementById('vlr_armacao').value = parseFloat(data.vlr_armacao).toFixed(2);
         if(data.vlr_lentes) document.getElementById('vlr_lentes').value = parseFloat(data.vlr_lentes).toFixed(2);
         if(data.vlr_desconto) document.getElementById('vlr_desconto').value = parseFloat(data.vlr_desconto).toFixed(2);
         if(data.vlr_total) document.getElementById('vlr_total').value = parseFloat(data.vlr_total).toFixed(2);
-        // ---------------------------------------
 
-        // 2. CORREÇÃO PROATIVA: Força a busca das listas de lentes (OD e OE)
+        // Força a busca das listas de lentes (OD e OE)
         if (data.tipo_lente_od) {
             await filtrarLentes('od'); 
             document.getElementById('nome_lente_od').value = data.nome_lente_od;
@@ -1113,22 +1120,14 @@ function irParaFinanceiro() {
 }
 
 async function puxarDadosPedido(numOS) {
-    if (!numOS) return;
-
-    const { data, error } = await _supabase
-        .from('tabela_pedidos')
-        .select('nome_cliente, vlr_total, num_os')
-        .eq('num_os', numOS)
-        .maybeSingle();
-
-    if (data) {
-        document.getElementById('fin_valor').value = data.vlr_total;
-        document.getElementById('fin_desc').value = "Recebimento: " + data.nome_cliente + " (OS " + data.num_os + ")";
+    // SE CLICAR NO ESPAÇO EM BRANCO, LIMPA TUDO E PARA
+    if (!numOS || numOS === "") {
+        document.getElementById('fin_valor').value = "";
+        document.getElementById('fin_desc').value = "";
+        document.getElementById('corpo_parcelas_video').innerHTML = "";
+        document.getElementById('res_falta_video').innerText = "0,00";
+        return; 
     }
-}
-
-async function puxarDadosPedido(numOS) {
-    if (!numOS) return;
 
     // 1. Busca os dados do pedido (Valor e Nome)
     const { data: pedido } = await _supabase
@@ -1139,8 +1138,11 @@ async function puxarDadosPedido(numOS) {
 
     if (pedido) {
         document.getElementById('fin_valor').value = parseFloat(pedido.vlr_total).toFixed(2);
+        document.getElementById('fin_taxa').value = 0; 
+        
         const descGerada = "Recebimento: " + pedido.nome_cliente + " (OS " + pedido.num_os + ")";
         document.getElementById('fin_desc').value = descGerada;
+
 
         // 2. BUSCA NO BANCO: Já existem parcelas para essa OS?
         const { data: parcelasExistentes } = await _supabase
@@ -1157,8 +1159,7 @@ async function puxarDadosPedido(numOS) {
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = "1px solid #eee";
                 
-                // --- LÓGICA DE STATUS ---
-                // Se p.pago for true, fica verde. Se não, fica branco.
+                // Lógica de cores: verde para pago, branco para pendente
                 const corFundo = p.pago ? "#e8f5e9" : "#ffffff";
                 tr.style.backgroundColor = corFundo;
 
@@ -1178,9 +1179,46 @@ async function puxarDadosPedido(numOS) {
             });
             document.getElementById('res_falta_video').innerText = "LANÇADO";
         } else {
+            // Se não tiver nada lançado, limpa a tabela e mostra 0,00
+            corpo.innerHTML = "";
             document.getElementById('res_falta_video').innerText = "0,00";
         }
     }
+}
+
+
+function gerarParcelasVideo() {
+    const valorBase = parseFloat(document.getElementById('fin_valor').value) || 0;
+    const taxa = parseFloat(document.getElementById('fin_taxa').value) || 0;
+    const qtde = parseInt(document.getElementById('fin_qtde').value) || 1;
+    const intervalo = parseInt(document.getElementById('fin_intervalo').value) || 30;
+    const dataInicial = document.getElementById('fin_data').value;
+    const corpo = document.getElementById('corpo_parcelas_video');
+
+    if (!valorBase || !dataInicial) { 
+        alert("Preencha o Valor e a Data de Vencimento!"); 
+        return; 
+    }
+
+    const valorComTaxa = valorBase + (valorBase * (taxa / 100));
+    corpo.innerHTML = ""; 
+    const valorParcela = (valorComTaxa / qtde).toFixed(2);
+
+    for (let i = 0; i < qtde; i++) {
+        let d = new Date(dataInicial + 'T00:00:00');
+        d.setDate(d.getDate() + (i * intervalo));
+
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = "1px solid #eee";
+        tr.innerHTML = `
+            <td style="padding: 5px; border-right: 1px solid #ccc;">${i + 1}º</td>
+            <td style="padding: 5px; border-right: 1px solid #ccc;">${d.toLocaleDateString('pt-BR')}</td>
+            <td style="padding: 5px; font-weight: bold;">R$ ${valorParcela.replace('.', ',')}</td>
+        `;
+        corpo.appendChild(tr);
+    }
+    // ESTA LINHA LIMPA O VALOR FRACIONADO NO RODAPÉ:
+    document.getElementById('res_falta_video').innerText = valorComTaxa.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 async function excluirParcela(id, numOS) {
@@ -1217,21 +1255,25 @@ async function baixarParcela(id, numOS) {
 }
 
 async function salvarTudoNoBanco() {
-    const valorTotal = parseFloat(document.getElementById('fin_valor').value);
+    // 1. Pega os valores (incluindo a nova Taxa %)
+    const valorBase = parseFloat(document.getElementById('fin_valor').value);
+    const taxa = parseFloat(document.getElementById('fin_taxa').value) || 0;
     const qtde = parseInt(document.getElementById('fin_qtde').value) || 1;
     const intervalo = parseInt(document.getElementById('fin_intervalo').value) || 30;
     const dataInicial = document.getElementById('fin_data').value;
     const tipo = document.getElementById('fin_tipo_pag').value;
     const desc = document.getElementById('fin_desc').value;
 
-    if (!valorTotal || !dataInicial) {
-        alert("Gere as parcelas no botão LANÇAR antes de confirmar!");
+    if (!valorBase || !dataInicial) {
+        alert("Preencha Valor e Data antes de confirmar!");
         return;
     }
 
-    const valorParcela = (valorTotal / qtde).toFixed(2);
+    // 2. Cálculo Proativo: Aplica a taxa antes de gerar as parcelas para o banco
+    const valorComTaxa = valorBase + (valorBase * (taxa / 100));
+    const valorParcela = (valorComTaxa / qtde).toFixed(2);
 
-    // Loop para salvar cada parcela individualmente
+    // 3. Loop para salvar cada parcela individualmente no Supabase
     for (let i = 0; i < qtde; i++) {
         let d = new Date(dataInicial + 'T00:00:00');
         d.setDate(d.getDate() + (i * intervalo));
@@ -1240,37 +1282,32 @@ async function salvarTudoNoBanco() {
             valor: parseFloat(valorParcela),
             descricao: qtde > 1 ? `${desc} (${i + 1}/${qtde})` : desc,
             tipo: tipo,
-            data: d.toISOString()
+            data: d.toISOString(),
+            pago: false // Garante que a parcela comece como Pendente
         }]);
 
         if (error) {
-            alert("Erro ao salvar parcela " + (i+1));
+            alert("Erro ao salvar parcela " + (i + 1));
             return;
         }
     }
 
-// ... (parte de cima da função que faz o loop do insert no Supabase)
+    alert("✅ Financeiro lançado com sucesso!");
 
-    alert("✅ Lançamento realizado com sucesso!");
-
-    // 1. Limpa apenas os dados do lançamento atual para permitir o próximo
+    // 4. Limpa os campos para o próximo lançamento
     document.getElementById('corpo_parcelas_video').innerHTML = ""; 
     document.getElementById('fin_valor').value = "";
+    document.getElementById('fin_taxa').value = "0"; // Reseta a taxa
     document.getElementById('fin_desc').value = "";
-    document.getElementById('fin_qtde').value = "1";
-    document.getElementById('fin_intervalo').value = "30";
     document.getElementById('fin_data').value = "";
     document.getElementById('res_falta_video').innerText = "0,00";
 
-    // 2. Opcional: Se quiser que o campo de busca reapareça para o próximo cliente
-    document.getElementById('busca_fin_wrapper').style.display = 'block';
-
-    // REMOVEMOS: location.reload(); 
-    // REMOVEMOS: voltarAoMenu();
+    // 5. Atualiza a lista visual embaixo automaticamente
+    const numOS = desc.match(/OS (\d+)/)?.[1];
+    if (numOS) puxarDadosPedido(numOS);
     
-    // Agora o sistema fica parado exatamente onde está.
+    document.getElementById('busca_fin_wrapper').style.display = 'block';
 }
-
 async function buscarCEP(valor) {
     // Remove qualquer traço ou ponto para deixar só números
     const cep = valor.replace(/\D/g, '');
@@ -1323,6 +1360,49 @@ function mascaraTel(i) {
     
     i.value = v;
 }
+
+function limparCamposRapido() {
+    console.log("Iniciando limpeza total...");
+
+    // 1. Limpa todos os Inputs, Selects e Textareas
+    document.querySelectorAll('input, select, textarea').forEach(el => {
+        // Não limpa o login para você não ser deslogado
+        if (!['user_login', 'pass_login'].includes(el.id)) {
+            el.value = "";
+        }
+    });
+
+    // 2. Reseta as Datas para o dia de hoje
+    const hoje = new Date().toISOString().split('T')[0];
+    if (document.getElementById('data_os')) document.getElementById('data_os').value = hoje;
+    if (document.getElementById('fin_data')) document.getElementById('fin_data').value = hoje;
+
+    // 3. Zera os valores financeiros na tela
+    const camposZero = ['vlr_lentes', 'vlr_total', 'vlr_armacao', 'vlr_desconto', 'fin_valor', 'fin_taxa'];
+    camposZero.forEach(id => {
+        const campo = document.getElementById(id);
+        if (campo) campo.value = (id === 'fin_taxa') ? "0" : "0.00";
+    });
+
+    // 4. Limpa a tabela visual do Financeiro (as parcelas que ficam embaixo)
+    const corpoFin = document.getElementById('corpo_parcelas_video');
+    if (corpoFin) corpoFin.innerHTML = "";
+    
+    const faltaFin = document.getElementById('res_falta_video');
+    if (faltaFin) faltaFin.innerText = "0,00";
+
+    // 5. Limpa campos de visualização (como o Ø Sugerido)
+    if (document.getElementById('m_diametro')) document.getElementById('m_diametro').value = "";
+
+    // 6. Reseta o estado do sistema
+    editandoPedido = false;
+    
+    // Força o Select de busca a voltar para o topo (vazio)
+    if (document.getElementById('select_busca')) document.getElementById('select_busca').value = "";
+
+    console.log("Sistema limpo e pronto para novo uso.");
+}
+
 </script>
 </body>
 </html>
