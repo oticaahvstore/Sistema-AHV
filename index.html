@@ -479,9 +479,12 @@
 
 <div class="footer-buttons no-print">
     <button class="btn btn-save" title="Salvar" onclick="salvarPedido()">💾</button>
+    <button class="btn btn-new" title="Novo Pedido" onclick="novoPedido()">📄</button>
     <button class="btn btn-print" title="Imprimir Via Cliente" onclick="imprimirGeral()">🖨️</button>
     <button class="btn btn-lab" title="Via Laboratório" onclick="imprimirLaboratorio()">🔬</button>
-    <button class="btn btn-new" title="Novo Pedido" onclick="novoPedido()">📄</button>
+    <button class="btn btn-whatsapp" title="Enviar via WhatsApp" onclick="enviarWhatsApp()" style="background-color: #25d366;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="width: 20px; height: 20px; vertical-align: middle;">
+    </button>
 </div>    </div>
 </div>
 
@@ -1401,6 +1404,41 @@ function limparCamposRapido() {
     if (document.getElementById('select_busca')) document.getElementById('select_busca').value = "";
 
     console.log("Sistema limpo e pronto para novo uso.");
+}
+
+function enviarWhatsApp() {
+    try {
+        // Pega os dados usando os IDs REAIS do seu sistema
+        const nome = document.getElementById('nome_cliente').value || "Cliente";
+        const total = document.getElementById('vlr_total').value || "0,00";
+        let fone = document.getElementById('tel_cliente').value || "";
+        
+        // Limpa o telefone (tira parênteses e traços)
+        fone = fone.replace(/\D/g, '');
+        
+        // Adiciona o código do Brasil (55) se não tiver
+        if (fone.length > 0 && !fone.startsWith('55')) {
+            fone = '55' + fone;
+        }
+
+        // Se não tiver telefone, avisa o usuário
+        if (fone === "" || fone === "55") {
+            alert("Por favor, preencha o telefone do cliente.");
+            return;
+        }
+
+        // Monta a mensagem bonitinha
+        const msg = `Olá *${nome}*! Segue o orçamento da *Ótica AHV Store* no valor de *R$ ${total}*.`;
+        
+        // Cria o link que o WhatsApp entende
+        const link = `https://wa.me/${fone}?text=${encodeURIComponent(msg)}`;
+        
+        // Abre o WhatsApp (No computador abre o Web, no Tablet abrirá o App)
+        window.location.href = link;
+
+    } catch (e) {
+        alert("Erro ao preparar mensagem. Verifique se os dados do cliente foram preenchidos.");
+    }
 }
 
 </script>
