@@ -1296,8 +1296,12 @@ function gerarRelatorioFinanceiro() {
 
     html += "<script>window.print();<\/script></body></html>";
 
-    janela.document.write(html);
-    janela.document.close();
+    // Cria um "link" invisível com o conteúdo do relatório
+    var blob = new Blob([html], { type: 'text/html' });
+    var url = URL.createObjectURL(blob);
+    
+    // Abre o relatório diretamente em uma nova aba
+    window.open(url, '_blank');
 }
 
 
