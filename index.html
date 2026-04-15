@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Pedidos - ÓTICA AHV STORE</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { 
             --primary: #1a237e; 
@@ -739,7 +740,19 @@ async function abrirRelatorioMEI() {
 
         if (error) throw error;
 
-        const totalFaturado = data.reduce((acc, item) => acc + parseFloat(item.vlr_total || 0), 0);
+        let totalFaturado = 0;
+let quantidade = 0;
+
+data.forEach(item => {
+    const valor = parseFloat(item.vlr_total) || 0;
+
+    if (valor > 0) {
+        totalFaturado += valor;
+        quantidade++;
+    }
+});
+
+const ticketMedio = quantidade > 0 ? (totalFaturado / quantidade) : 0;
         const limiteMEI = 81000;
         const saldoRestante = limiteMEI - totalFaturado;
 
@@ -788,12 +801,19 @@ async function abrirRelatorioMEI() {
                     </tbody>
                 </table>
 
-                <div class="resumo">
-                    <p><strong>Faturamento Bruto:</strong> R$ ${totalFaturado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
-                    <p><strong>Limite Anual MEI:</strong> R$ ${limiteMEI.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
-                    <p><strong>Saldo Disponível para o Ano:</strong> R$ ${saldoRestante.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
-                </div>
+<div class="resumo">
+    <p><strong>Faturamento Bruto:</strong> R$ ${totalFaturado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
 
+    <p><strong>Quantidade de Vendas:</strong> ${quantidade}</p>
+
+    <p><strong>Ticket Médio:</strong> R$ ${ticketMedio.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+
+    <hr>
+
+    <p><strong>Limite Anual MEI:</strong> R$ ${limiteMEI.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+
+    <p><strong>Saldo Disponível:</strong> R$ ${saldoRestante.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+</div>
                 <div class="footer">
                     <p>Documento gerado em ${new Date().toLocaleString('pt-BR')}</p>
                     <button class="no-print" onclick="window.print()" style="padding: 10px 20px; cursor: pointer; margin-top: 20px;">Imprimir Agora</button>
