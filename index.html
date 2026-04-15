@@ -749,7 +749,7 @@ async function abrirRelatorioMEI() {
                     <tbody>
                         ${data.map(v => `
                             <tr>
-                                <td>${new Date(v.data_os).toLocaleDateString('pt-BR')}</td>
+                                <td>${new Date(v.data_os).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</td>
                                 <td>${v.num_os || '---'}</td>
                                 <td>${v.nome_cliente || 'Não informado'}</td>
                                 <td>${parseFloat(v.vlr_total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
@@ -759,7 +759,7 @@ async function abrirRelatorioMEI() {
                 </table>
 
                 <div class="resumo">
-                    <p><strong>Faturamento Total Acumulado:</strong> R$ ${totalFaturado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                    <p><strong>Faturamento Bruto:</strong> R$ ${totalFaturado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
                     <p><strong>Limite Anual MEI:</strong> R$ ${limiteMEI.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
                     <p><strong>Saldo Disponível para o Ano:</strong> R$ ${saldoRestante.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
                 </div>
