@@ -1738,6 +1738,17 @@ function alternarLista() {
     }
 }
 
+function dispararImpressao() {
+    // Se estiver dentro do App Android
+    if (window.AndroidPrint && typeof window.AndroidPrint.printTokens === "function") {
+        window.AndroidPrint.printTokens();
+    } 
+    // Se estiver no navegador do PC
+    else {
+        window.print();
+    }
+}
+
 </script>
 </body>
 </html>
