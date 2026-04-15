@@ -62,6 +62,7 @@
 
         .cor-pedidos { background-color: #2d3e50; } 
         .cor-entradas { background-color: #435160; }
+        .cor-mei { background-color: #607d8b; }
         .cor-vazio { background-color: #f5f5f5; color: #bbb; border: 2px dashed #ddd; cursor: default; }
 
         /* --- FIM DO MENU DE BLOCOS --- */
@@ -339,6 +340,17 @@
     <div class="bloco-rodape">
         <span class="bloco-label">CAIXA</span>
         <span class="bloco-icone">💰</span>
+    </div>
+</button>
+
+<button class="bloco-menu cor-mei" onclick="abrirRelatorioMEI()">
+    <div>
+        <h3 class="bloco-titulo">MEI</h3>
+        <p class="bloco-sub">Resumo DASN-SIMEI</p>
+    </div>
+    <div class="bloco-rodape">
+        <span class="bloco-label">CONTABILIDADE</span>
+        <span class="bloco-icone">📄</span>
     </div>
 </button>
 </div>
@@ -677,11 +689,95 @@ function navegarPara(aba) {
         abrirAba(aba);
     }
 }
-    function voltarAoMenu() {
-        document.getElementById('sistema-content').style.display = 'none';
-        document.getElementById('menu-principal').style.display = 'grid';
-    }
 
+
+async function abrirRelatorioMEI() {
+    const URL_REAL = "SUA_URL"; 
+    const KEY_REAL = "SUA_KEY";
+
+    try {
+        const conexaoMEI = supabase.createClient('https://gxeuheqhpsapigyozanu.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4ZXVoZXFocHNhcGlneW96YW51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNzU3NDcsImV4cCI6MjA4OTc1MTc0N30.h_Yqrj959cpXFKSYO3wrvGQ7RXO5QEL2NeRy1QqfQJc');
+        const anoAtual = 2026;
+
+        // Busca detalhada dos dados
+        const { data, error } = await conexaoMEI
+            .from('tabela_pedidos')
+            .select('num_os, data_os, vlr_total, nome_cliente')
+            .gte('data_os', `${anoAtual}-01-01`)
+            .lte('data_os', `${anoAtual}-12-31`)
+            .order('data_os', { ascending: true });
+
+        if (error) throw error;
+
+        const totalFaturado = data.reduce((acc, item) => acc + parseFloat(item.vlr_total || 0), 0);
+        const limiteMEI = 81000;
+        const saldoRestante = limiteMEI - totalFaturado;
+
+        // Criando o conteúdo da página de impressão
+        const janelaImpressao = window.open('', '', 'width=900,height=700');
+        
+        janelaImpressao.document.write(`
+            <html>
+            <head>
+                <title>Relatório MEI 2026 - Ótica AHV</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+                    .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+                    th { background-color: #f2f2f2; }
+                    .resumo { margin-top: 30px; padding: 15px; border: 1px solid #000; background: #fafafa; }
+                    .footer { margin-top: 50px; text-align: center; font-size: 12px; }
+                    @media print { .no-print { display: none; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>ÓTICA AHV STORE</h1>
+                    <h2>Relatório Anual de Faturamento MEI - Ano Base ${anoAtual}</h2>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Nº OS</th>
+                            <th>Cliente</th>
+                            <th>Valor (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(v => `
+                            <tr>
+                                <td>${new Date(v.data_os).toLocaleDateString('pt-BR')}</td>
+                                <td>${v.num_os || '---'}</td>
+                                <td>${v.nome_cliente || 'Não informado'}</td>
+                                <td>${parseFloat(v.vlr_total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <div class="resumo">
+                    <p><strong>Faturamento Total Acumulado:</strong> R$ ${totalFaturado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                    <p><strong>Limite Anual MEI:</strong> R$ ${limiteMEI.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                    <p><strong>Saldo Disponível para o Ano:</strong> R$ ${saldoRestante.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                </div>
+
+                <div class="footer">
+                    <p>Documento gerado em ${new Date().toLocaleString('pt-BR')}</p>
+                    <button class="no-print" onclick="window.print()" style="padding: 10px 20px; cursor: pointer; margin-top: 20px;">Imprimir Agora</button>
+                </div>
+            </body>
+            </html>
+        `);
+
+        janelaImpressao.document.close();
+
+    } catch (err) {
+        alert("Erro ao gerar relatório para impressão: " + err.message);
+    }
+}
     // --- BUSCA NAS TABELAS (CONVERSA ENTRE TABELAS) ---
 
     // 1. Busca Lente por Código
