@@ -452,7 +452,7 @@
 
         <div class="section-title cliente-titulo">Dados do Cliente</div>
         <div class="eye-row">
-            <div class="input-group" style="flex: 0.6;"><label>Data</label><input type="date" id="data_os"></div>
+            <div class="input-group" style="flex: 0.6;"><label>Data</label><input type="date" id="data_os" onchange="calcularPrevisao()"></div>
             <div class="input-group" style="flex: 0.5;"><label>O.S. Nº</label><input type="text" id="num_os" style="font-weight: bold; color: red;"></div>
             <div class="input-group" style="flex: 1.5;"><label>Nome Completo</label><input type="text" id="nome_cliente"></div>
             <div class="input-group sensivel" style="flex: 0.8;"><label>CPF</label><input type="text" id="cpf_cliente" maxlength="14" oninput="mascaraCPF(this)"></div>
@@ -469,6 +469,28 @@
             <div class="input-group"><label>Cidade</label><input type="text" id="cid_cliente"></div>
             <div class="input-group" style="flex: 0.3;"><label>UF</label><input type="text" id="uf_cliente" maxlength="2"></div>
         </div>
+
+<div class="eye-row">
+    <div class="input-group" style="flex:1;">
+        <label>Status</label>
+            <select id="status_pedido" onchange="verificarMudancaStatus()">
+            <option value="Aguardando">Aguardando</option>
+            <option value="Produção">Em Produção</option>
+            <option value="Pronto">Pronto</option>
+            <option value="Entregue">Entregue</option>
+        </select>
+    </div>
+
+    <div class="input-group" style="flex:1;">
+        <label>Previsão Entrega</label>
+        <input type="date" id="data_previsao" onchange="verificarAtraso()">
+    </div>
+
+    <div class="input-group" style="flex:1;">
+        <label>Dias Prazo</label>
+        <input type="number" id="dias_prazo" value="3" oninput="calcularPrevisao()">
+    </div>
+</div>
 
         <div class="section-title">Prescrição Longe</div>
 <div class="eye-row">
@@ -567,7 +589,10 @@
 
 <script>
     const _supabase = supabase.createClient('https://gxeuheqhpsapigyozanu.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4ZXVoZXFocHNhcGlneW96YW51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNzU3NDcsImV4cCI6MjA4OTc1MTc0N30.h_Yqrj959cpXFKSYO3wrvGQ7RXO5QEL2NeRy1QqfQJc');
-    let editandoPedido = false; 
+    
+    let editandoPedido = false;
+    let statusAnterior = ""; 
+
     let timerInatividade;
     const TEMPO_LIMITE = 300000; 
 
@@ -661,8 +686,13 @@ async function carregarPedidoSelecionado(numOS) {
             await filtrarLentes('oe');
             document.getElementById('nome_lente_oe').value = data.nome_lente_oe;
         }
-        
+                
+        statusAnterior = document.getElementById('status_pedido')?.value || "";
+
         editandoPedido = true;
+
+        verificarAtraso();
+
     }
 }
 
@@ -896,6 +926,9 @@ function calcularTotal() {
     // Removemos o "R$" e mantemos o ponto decimal para o banco entender
     const total = (armacao + lentes - desconto).toFixed(2);
     document.getElementById('vlr_total').value = total; 
+
+atualizarStatusAutomatico();
+
 }
 
 
@@ -1736,6 +1769,106 @@ function alternarLista() {
     } else {
         area.style.display = "none";
     }
+}
+
+function calcularPrevisao() {
+    const dataPedido = document.getElementById('data_os').value;
+    const dias = parseInt(document.getElementById('dias_prazo').value) || 0;
+
+    if (!dataPedido) return;
+
+    const data = new Date(dataPedido);
+    data.setDate(data.getDate() + dias);
+
+    const formatada = data.toISOString().split('T')[0];
+    document.getElementById('data_previsao').value = formatada;
+}
+
+function verificarAtraso() {
+    const previsao = document.getElementById('data_previsao').value;
+    const status = document.getElementById('status_pedido').value;
+
+    if (!previsao) return;
+
+    const hoje = new Date();
+    const dataPrev = new Date(previsao);
+
+    const campo = document.getElementById('data_previsao');
+
+    if (status !== "Entregue" && dataPrev < hoje) {
+        campo.style.backgroundColor = "#ffcccc"; // ATRASADO
+    } else {
+        campo.style.backgroundColor = "#ccffcc"; // OK
+    }
+}
+
+function atualizarStatusAutomatico() {
+    const status = document.getElementById('status_pedido');
+    const total = parseFloat(document.getElementById('vlr_total').value) || 0;
+
+    if (!status) return;
+
+    // Se ainda estiver como "Aguardando" e já tem valor
+    if (status.value === "Aguardando" && total > 0) {
+        status.value = "Produção";
+    }
+}
+
+function enviarWhatsAppStatus() {
+    const nome = document.getElementById('nome_cliente').value || "Cliente";
+    const os = document.getElementById('num_os').value || "---";
+    const valor = document.getElementById('vlr_total').value || "0,00";
+    const data = document.getElementById('data_os').value;
+
+    let telefone = document.getElementById('tel_cliente').value;
+
+    if (!telefone) {
+        alert("Telefone do cliente não preenchido!");
+        return;
+    }
+
+    // Limpar telefone
+    telefone = telefone.replace(/\D/g, '');
+
+    if (!telefone.startsWith("55")) {
+        telefone = "55" + telefone;
+    }
+
+    // Formatando data BR
+    let dataFormatada = "";
+    if (data) {
+        const d = new Date(data);
+        dataFormatada = d.toLocaleDateString('pt-BR');
+    }
+
+    const mensagem = 
+`Olá ${nome}
+
+Seu óculos já está *PRONTO*!
+
+*OS:* ${os}
+*Valor:* R$ ${valor}
+*Data:* ${dataFormatada}
+
+Em breve estaremos lhe entregando!
+A Ótica AHV Store agradece a sua preferência.`;
+
+    const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+
+    window.open(url, '_blank');
+}
+
+function verificarMudancaStatus() {
+    const statusAtual = document.getElementById('status_pedido').value;
+
+    // Se mudou para "Pronto"
+    if (statusAtual === "Pronto" && statusAnterior !== "Pronto") {
+        enviarWhatsAppStatus();
+    }
+
+    statusAnterior = statusAtual;
+
+    verificarAtraso(); // mantém sua lógica de atraso
 }
 
 </script>
