@@ -187,19 +187,37 @@
     </div>
 </div>
 
-<div id="area_lista_detalhada" style="display: none; margin-top: 15px; background: #fff; border: 1px solid #999; border-radius: 4px; overflow: hidden;">
-    <div style="background: #1a237e; color: white; padding: 5px; font-size: 10px; font-weight: bold; text-align: center;">
-        Movimento
+<div id="area_entradas" style="display: none; margin-top: 15px; background: #fff; border: 1px solid #999; border-radius: 4px; overflow: hidden;">
+    <div style="background: #2e7d32; color: white; padding: 5px; font-size: 10px; font-weight: bold; text-align: center;">
+        ENTRADAS (RECEITAS)
     </div>
     <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
-        <thead style="background: #eee;">
+        <thead style="background: #f0fdf4;">
             <tr>
                 <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">Data</th>
                 <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">Descrição</th>
                 <th style="border: 1px solid #ccc; padding: 5px; text-align: right;">Valor</th>
+                <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Ação</th>
             </tr>
         </thead>
-        <tbody id="corpo_relatorio_financeiro"></tbody>
+        <tbody id="corpo_entradas"></tbody>
+    </table>
+</div>
+
+<div id="area_saidas" style="display: none; margin-top: 15px; background: #fff; border: 1px solid #999; border-radius: 4px; overflow: hidden;">
+    <div style="background: #c62828; color: white; padding: 5px; font-size: 10px; font-weight: bold; text-align: center;">
+        SAÍDAS (DESPESAS)
+    </div>
+    <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+        <thead style="background: #fef2f2;">
+            <tr>
+                <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">Data</th>
+                <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">Descrição</th>
+                <th style="border: 1px solid #ccc; padding: 5px; text-align: right;">Valor</th>
+                <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Ação</th>
+            </tr>
+        </thead>
+        <tbody id="corpo_saidas"></tbody>
     </table>
 </div>
 
@@ -590,6 +608,8 @@
 
 <script>
     const _supabase = supabase.createClient('https://gxeuheqhpsapigyozanu.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4ZXVoZXFocHNhcGlneW96YW51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNzU3NDcsImV4cCI6MjA4OTc1MTc0N30.h_Yqrj959cpXFKSYO3wrvGQ7RXO5QEL2NeRy1QqfQJc');
+
+    let idEdicao = null;
     
     let editandoPedido = false;
     let statusAnterior = ""; 
@@ -1343,6 +1363,7 @@ function irParaFinanceiro() {
 }
 
 // Faz a soma proativa de Vendas vs Despesas no banco
+
 async function atualizarResumoMensal() {
     const dInicio = document.getElementById('filtro_inicio').value;
     const dFim = document.getElementById('filtro_fim').value;
@@ -1353,7 +1374,7 @@ async function atualizarResumoMensal() {
 
     const { data: lancamentos, error } = await _supabase
         .from('financeiro')
-        .select('valor, tipo, descricao, data')
+        .select('id, valor, tipo, descricao, data')
         .gte('data', inicio + "T00:00:00.000Z")
         .lte('data', fim + "T23:59:59.999Z")
         .order('data', { ascending: true });
@@ -1361,18 +1382,23 @@ async function atualizarResumoMensal() {
     if (error) return console.error(error);
 
     let vdas = 0, dsps = 0;
-    const corpoTabela = document.getElementById('corpo_relatorio_financeiro');
-    corpoTabela.innerHTML = ""; // Limpa a lista antes de preencher
+    
+    // Pega as duas novas tabelas
+    const corpoEntradas = document.getElementById('corpo_entradas');
+    const corpoSaidas = document.getElementById('corpo_saidas');
+    
+    corpoEntradas.innerHTML = ""; 
+    corpoSaidas.innerHTML = "";
 
     if (lancamentos) {
         lancamentos.forEach(item => {
             const v = parseFloat(item.valor) || 0;
-            const isDespesa = item.tipo === "Despesa";
+            // Define o que é despesa (Saída)
+            const isDespesa = (item.tipo === "Despesa" || item.tipo === "Lentes" || item.tipo === "Montagens" || item.tipo === "Logistica" || item.tipo === "Impostos/Taxas");
             
             if (isDespesa) dsps += v;
             else vdas += v;
 
-            // CRIA A LINHA NA TABELA DA TELA
             const tr = document.createElement('tr');
             tr.style.borderBottom = "1px solid #eee";
             tr.innerHTML = `
@@ -1381,14 +1407,52 @@ async function atualizarResumoMensal() {
                 <td style="padding: 8px; text-align: right; color: ${isDespesa ? 'red' : 'green'}; font-weight: bold;">
                     R$ ${v.toFixed(2).replace('.', ',')}
                 </td>
+                <td style="padding: 8px; text-align: center;">
+                    <button onclick="prepararEdicao('${item.id}', '${v}', '${item.tipo}', '${item.data.split('T')[0]}', '${item.descricao || ""}')" 
+                            style="background: #1a237e; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px;">
+                        EDITAR
+                    </button>
+                </td>
             `;
-            corpoTabela.appendChild(tr);
+
+            // Envia para a tabela correta com base no tipo
+            if (isDespesa) {
+                tr.style.color = "#c62828"; // Texto Vermelho
+                corpoSaidas.appendChild(tr);
+            } else {
+                tr.style.color = "#2e7d32"; // Texto Verde
+                corpoEntradas.appendChild(tr);
+            }
         });
     }
 
+    // Atualiza os valores nos cards de resumo do topo
     document.getElementById('resumo_vendas').innerText = vdas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     document.getElementById('resumo_despesas').innerText = dsps.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     document.getElementById('resumo_receita').innerText = (vdas - dsps).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+
+function prepararEdicao(id, valor, tipo, data, descricao) {
+    // 1. Guarda o ID na variável global que criamos lá no topo
+    idEdicao = id;
+
+    // 2. Preenche os campos do formulário com os dados da linha clicada
+    document.getElementById('fin_valor').value = valor;
+    document.getElementById('fin_tipo_pag').value = tipo;
+    document.getElementById('fin_data').value = data;
+    document.getElementById('fin_desc').value = descricao;
+
+    // 3. Muda o texto do botão CONFIRMAR para você saber que está editando
+    // Procure o botão que chama a função salvarTudoNoBanco
+    const btnConfirmar = document.querySelector("button[onclick='salvarTudoNoBanco()']");
+    if (btnConfirmar) {
+        btnConfirmar.innerText = "ATUALIZAR";
+        btnConfirmar.style.background = "#1a237e"; // Muda para azul para destacar
+    }
+
+    // 4. Sobe a página para o formulário aparecer na tela
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // FUNÇÃO PARA IMPRIMIR O RELATÓRIO COM A LISTA
@@ -1404,8 +1468,8 @@ function gerarRelatorioFinanceiro() {
     var linhasDespesas = "";
 
     // 3. Pega as linhas da tabela que está na tela e separa o que é venda do que é gasto
-    var linhasAtuais = document.querySelectorAll('#corpo_relatorio_financeiro tr');
-    
+    var linhasAtuais = document.querySelectorAll('#corpo_entradas tr, #corpo_saidas tr'); 
+   
     linhasAtuais.forEach(function(tr) {
         var texto = tr.innerHTML;
         // Se o valor na linha for vermelho (contém 'red'), mandamos para o bloco de Despesas
@@ -1421,13 +1485,18 @@ function gerarRelatorioFinanceiro() {
     // Guardamos o sistema original para ele voltar depois
     var conteudoOriginal = document.body.innerHTML;
 
-    // Monta o Layout do Relatório
+// Monta o Layout do Relatório
     var html = "<html><head><style>";
     html += "body{font-family:sans-serif; padding:20px; background:white;}";
     html += "table{width:100%; border-collapse:collapse; margin-bottom:20px;}";
     html += "th,td{padding:8px; border-bottom:1px solid #eee; font-size:12px;}";
     html += ".titulo-secao{background:#f0f0f0; font-weight:bold; padding:10px; border-left:5px solid #1a237e; margin-bottom:5px;}";
     html += ".total-bloco{text-align:right; font-weight:bold; padding:10px; font-size:14px;}";
+    
+    // ABAIXO AS REGRAS PARA SUMIR O EDITAR
+    html += "button{display:none !important;}"; 
+    html += "td:last-child, th:last-child{display:none !important;}"; 
+    
     html += "</style></head><body>";
     html += "<h2 style='text-align:center'>RELATÓRIO FINANCEIRO - ÓTICA AHV</h2>";
 
@@ -1598,7 +1667,7 @@ async function baixarParcela(id, numOS) {
 }
 
 async function salvarTudoNoBanco() {
-    // 1. Pega os valores (incluindo a nova Taxa %)
+    // 1. Pega os valores
     const valorBase = parseFloat(document.getElementById('fin_valor').value);
     const taxa = parseFloat(document.getElementById('fin_taxa').value) || 0;
     const qtde = parseInt(document.getElementById('fin_qtde').value) || 1;
@@ -1612,45 +1681,66 @@ async function salvarTudoNoBanco() {
         return;
     }
 
-    // 2. Cálculo Proativo: Aplica a taxa antes de gerar as parcelas para o banco
+    // 2. Cálculo do valor
     const valorComTaxa = valorBase + (valorBase * (taxa / 100));
     const valorParcela = (valorComTaxa / qtde).toFixed(2);
 
-    // 3. Loop para salvar cada parcela individualmente no Supabase
-    for (let i = 0; i < qtde; i++) {
-        let d = new Date(dataInicial + 'T00:00:00');
-        d.setDate(d.getDate() + (i * intervalo));
-
-        const { error } = await _supabase.from('financeiro').insert([{
-            valor: parseFloat(valorParcela),
-            descricao: qtde > 1 ? `${desc} (${i + 1}/${qtde})` : desc,
-            tipo: tipo,
-            data: d.toISOString(),
-            pago: false // Garante que a parcela comece como Pendente
-        }]);
+    // --- LOGICA DE EDIÇÃO ---
+    if (idEdicao) {
+        // Se idEdicao existe, atualizamos apenas este registro específico
+        const { error } = await _supabase
+            .from('financeiro')
+            .update({
+                valor: parseFloat(valorParcela),
+                descricao: desc,
+                tipo: tipo,
+                data: new Date(dataInicial + 'T00:00:00').toISOString()
+            })
+            .eq('id', idEdicao);
 
         if (error) {
-            alert("Erro ao salvar parcela " + (i + 1));
+            alert("Erro ao atualizar o registro.");
             return;
         }
+        alert("✅ Registro atualizado com sucesso!");
+        idEdicao = null; // Reseta a variável de edição
+        document.querySelector("button[onclick='salvarTudoNoBanco()']").innerText = "CONFIRMAR";
+    } 
+    // --- MODO LANÇAMENTO NORMAL (PARCELAS) ---
+    else {
+        for (let i = 0; i < qtde; i++) {
+            let d = new Date(dataInicial + 'T00:00:00');
+            d.setDate(d.getDate() + (i * intervalo));
+
+            const { error } = await _supabase.from('financeiro').insert([{
+                valor: parseFloat(valorParcela),
+                descricao: qtde > 1 ? `${desc} (${i + 1}/${qtde})` : desc,
+                tipo: tipo,
+                data: d.toISOString(),
+                pago: false 
+            }]);
+
+            if (error) {
+                alert("Erro ao salvar parcela " + (i + 1));
+                return;
+            }
+        }
+        alert("✅ Financeiro lançado com sucesso!");
     }
 
-    alert("✅ Financeiro lançado com sucesso!");
-
-    // 4. Limpa os campos para o próximo lançamento
+    // 4. Limpa os campos
     document.getElementById('corpo_parcelas_video').innerHTML = ""; 
     document.getElementById('fin_valor').value = "";
-    document.getElementById('fin_taxa').value = "0"; // Reseta a taxa
+    document.getElementById('fin_taxa').value = "0"; 
     document.getElementById('fin_desc').value = "";
     document.getElementById('fin_data').value = "";
     document.getElementById('res_falta_video').innerText = "0,00";
+    document.getElementById('fin_qtde').value = "1"; // Reseta a quantidade
 
-    // 5. Atualiza a lista visual embaixo automaticamente
-    const numOS = desc.match(/OS (\d+)/)?.[1];
-    if (numOS) puxarDadosPedido(numOS);
-    
-    document.getElementById('busca_fin_wrapper').style.display = 'block';
+    // 5. Atualiza a lista visual
+    atualizarResumoMensal(); // Adicione esta linha para atualizar a tabela de movimento
 }
+
 async function buscarCEP(valor) {
     // Remove qualquer traço ou ponto para deixar só números
     const cep = valor.replace(/\D/g, '');
@@ -1783,12 +1873,32 @@ function enviarWhatsApp() {
 
 
 function alternarLista() {
-    var area = document.getElementById('area_lista_detalhada');
-    if (area.style.display === "none") {
-        area.style.display = "block";
-    } else {
-        area.style.display = "none";
-    }
+    const ent = document.getElementById('area_entradas');
+    const sai = document.getElementById('area_saidas');
+    
+    // Se a primeira estiver escondida, mostra as duas. Se não, esconde as duas.
+    const novoEstado = ent.style.display === 'none' ? 'block' : 'none';
+    
+    ent.style.display = novoEstado;
+    sai.style.display = novoEstado;
+    
+}
+
+function prepararEdicao(id, valor, tipo, data, descricao) {
+    idEdicao = id; // Lembra do idEdicao que criamos no topo do script?
+
+    document.getElementById('fin_valor').value = valor;
+    document.getElementById('fin_tipo_pag').value = tipo;
+    document.getElementById('fin_data').value = data;
+    document.getElementById('fin_desc').value = descricao;
+
+    // Muda o botão de confirmar para atualizar
+    const btnConfirmar = document.querySelector("button[onclick='salvarTudoNoBanco()']");
+    btnConfirmar.innerText = "ATUALIZAR REGISTRO";
+    btnConfirmar.style.background = "#1a237e";
+
+    // Rola a página para cima para facilitar a edição
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function calcularPrevisao() {
